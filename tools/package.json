@@ -1,0 +1,9 @@
+{
+  "name": "probuild-layout-tools",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "dependencies": {
+    "bpmn-auto-layout": "^0.4.0"
+  }
+}
