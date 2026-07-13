@@ -1,0 +1,11 @@
+# build output
+target/
+# local H2 database
+data/*.db
+# node tooling
+tools/node_modules/
+tools/package-lock.json
+# IDE
+.idea/
+.vscode/
+*.iml
