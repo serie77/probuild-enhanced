@@ -1,0 +1,146 @@
+{
+  "TC-CARD-01": {
+    "id": "TC-CARD-01",
+    "title": "Apply for Trade Card (new)",
+    "started": "2026-07-12T23:49:19.359Z",
+    "ended": "2026-07-12T23:49:31.866Z",
+    "journeyKey": "2251799813706628",
+    "state": "COMPLETED",
+    "endEvents": [
+      "J_End"
+    ],
+    "capabilities": [
+      "Cap_Loyalty:COMPLETED"
+    ]
+  },
+  "TC-CARD-02": {
+    "id": "TC-CARD-02",
+    "title": "Renew Trade Card",
+    "started": "2026-07-12T23:49:32.371Z",
+    "ended": "2026-07-12T23:49:48.668Z",
+    "journeyKey": "2251799813706777",
+    "state": "COMPLETED",
+    "endEvents": [
+      "J_End"
+    ],
+    "capabilities": [
+      "Cap_Loyalty:COMPLETED"
+    ]
+  },
+  "TC-BUY-01": {
+    "id": "TC-BUY-01",
+    "title": "Buy in stock, card payment",
+    "started": "2026-07-12T23:49:49.167Z",
+    "ended": "2026-07-12T23:50:23.765Z",
+    "journeyKey": "2251799813706934",
+    "state": "COMPLETED",
+    "endEvents": [
+      "J_End"
+    ],
+    "capabilities": [
+      "Cap_Sales:COMPLETED",
+      "Cap_Warehouse:COMPLETED",
+      "Cap_Loyalty:COMPLETED"
+    ]
+  },
+  "TC-BUY-02": {
+    "id": "TC-BUY-02",
+    "title": "Buy with finance approved (3 pools + DMN)",
+    "started": "2026-07-12T23:50:24.275Z",
+    "ended": "2026-07-12T23:51:07.286Z",
+    "journeyKey": "2251799813707331",
+    "state": "COMPLETED",
+    "endEvents": [
+      "J_End"
+    ],
+    "capabilities": [
+      "Cap_Sales:COMPLETED",
+      "Cap_Warehouse:COMPLETED",
+      "Cap_Loyalty:COMPLETED"
+    ]
+  },
+  "TC-BUY-03": {
+    "id": "TC-BUY-03",
+    "title": "Buy with finance DECLINED (DMN low score)",
+    "started": "2026-07-12T23:51:07.793Z",
+    "ended": "2026-07-12T23:51:34.229Z",
+    "journeyKey": "2251799813707854",
+    "state": "COMPLETED",
+    "endEvents": [
+      "J_EndCancel"
+    ],
+    "capabilities": [
+      "Cap_Sales:COMPLETED"
+    ]
+  },
+  "TC-BUY-04": {
+    "id": "TC-BUY-04",
+    "title": "Buy out of stock (backorder)",
+    "started": "2026-07-12T23:51:34.735Z",
+    "ended": "2026-07-12T23:51:49.009Z",
+    "journeyKey": "2251799813708152",
+    "state": "COMPLETED",
+    "endEvents": [
+      "J_EndCancel"
+    ],
+    "capabilities": [
+      "Cap_Sales:COMPLETED"
+    ]
+  },
+  "TC-BUY-05": {
+    "id": "TC-BUY-05",
+    "title": "Buy quote rejected",
+    "started": "2026-07-12T23:51:49.511Z",
+    "ended": "2026-07-12T23:52:05.752Z",
+    "journeyKey": "2251799813708304",
+    "state": "COMPLETED",
+    "endEvents": [
+      "J_EndCancel"
+    ],
+    "capabilities": [
+      "Cap_Sales:COMPLETED"
+    ]
+  },
+  "TC-HIRE-01": {
+    "id": "TC-HIRE-01",
+    "title": "Hire + maintenance (FixPro, 3 pools + 2 DMN)",
+    "started": "2026-07-12T23:52:06.257Z",
+    "ended": "2026-07-12T23:52:35.714Z",
+    "journeyKey": "2251799813708459",
+    "state": "COMPLETED",
+    "endEvents": [
+      "J_End"
+    ],
+    "capabilities": [
+      "Cap_Hire:COMPLETED",
+      "Cap_Warehouse:COMPLETED"
+    ]
+  },
+  "TC-HIRE-02": {
+    "id": "TC-HIRE-02",
+    "title": "Hire, no maintenance (restock)",
+    "started": "2026-07-12T23:52:36.225Z",
+    "ended": "2026-07-12T23:53:08.829Z",
+    "journeyKey": "2251799813708808",
+    "state": "COMPLETED",
+    "endEvents": [
+      "J_End"
+    ],
+    "capabilities": [
+      "Cap_Hire:COMPLETED",
+      "Cap_Warehouse:COMPLETED"
+    ]
+  },
+  "TC-HIRE-03": {
+    "id": "TC-HIRE-03",
+    "title": "Hire, tool unavailable",
+    "started": "2026-07-12T23:53:09.340Z",
+    "ended": "2026-07-12T23:53:23.580Z",
+    "journeyKey": "2251799813709106",
+    "state": "COMPLETED",
+    "endEvents": [],
+    "capabilities": [
+      "Cap_Hire:COMPLETED"
+    ]
+  }
+}
