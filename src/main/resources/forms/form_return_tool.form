@@ -1,0 +1,9 @@
+{
+  "components": [
+    { "text": "## Return tool", "type": "text", "id": "rt_h" },
+    { "label": "Booking reference", "type": "textfield", "key": "bookingReference", "disabled": true },
+    { "label": "I am returning the tool", "type": "checkbox", "key": "readyToReturn", "validate": { "required": true } }
+  ],
+  "type": "default", "id": "form_return_tool",
+  "executionPlatform": "Camunda Cloud", "executionPlatformVersion": "8.8.0", "schemaVersion": 18
+}

@@ -1,0 +1,27 @@
+{
+  "components": [
+    { "text": "## Browse products", "type": "text", "id": "bp_h" },
+    {
+      "label": "Product",
+      "type": "select",
+      "key": "productCode",
+      "values": [
+        { "label": "Treated Pine 2x4 (TIM-2x4)", "value": "TIM-2x4" },
+        { "label": "Fibreglass Insulation 50mm (INS-50)", "value": "INS-50" },
+        { "label": "Plasterboard 12.5mm (PLB-12)", "value": "PLB-12" },
+        { "label": "Power Drill Bits Set (PWR-D18)", "value": "PWR-D18" },
+        { "label": "Fasteners Assortment Box (FST-BOX)", "value": "FST-BOX" },
+        { "label": "Polyurethane Adhesive 500ml (ADH-PU)", "value": "ADH-PU" }
+      ],
+      "validate": { "required": true }
+    },
+    {
+      "label": "Quantity",
+      "type": "number",
+      "key": "quantityRequired",
+      "validate": { "required": true, "min": 1, "max": 9999 }
+    }
+  ],
+  "type": "default", "id": "form_browse_products",
+  "executionPlatform": "Camunda Cloud", "executionPlatformVersion": "8.8.0", "schemaVersion": 18
+}

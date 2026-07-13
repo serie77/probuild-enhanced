@@ -1,0 +1,22 @@
+{
+  "components": [
+    { "text": "## Inspect returned tool", "type": "text", "id": "it_h" },
+    { "label": "Booking reference", "type": "textfield", "key": "bookingReference", "disabled": true },
+    {
+      "label": "Condition on return",
+      "type": "radio",
+      "key": "conditionOnReturn",
+      "values": [
+        { "label": "Good", "value": "good" },
+        { "label": "Minor wear", "value": "minor_wear" },
+        { "label": "Damaged", "value": "damaged" }
+      ],
+      "validate": { "required": true }
+    },
+    { "label": "Needs maintenance (send to FixPro)", "type": "checkbox", "key": "needsMaintenance" },
+    { "label": "Inspection notes", "type": "textarea", "key": "inspectionNotes" },
+    { "label": "Inspected by", "type": "textfield", "key": "inspectedByName", "validate": { "required": true } }
+  ],
+  "type": "default", "id": "form_inspect_tool",
+  "executionPlatform": "Camunda Cloud", "executionPlatformVersion": "8.8.0", "schemaVersion": 18
+}

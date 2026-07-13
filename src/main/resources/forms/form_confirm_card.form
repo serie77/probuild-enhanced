@@ -1,0 +1,38 @@
+{
+  "components": [
+    {
+      "text": "## Your Trade Card is ready\nReview your membership details and confirm.",
+      "type": "text",
+      "id": "cc_intro"
+    },
+    {
+      "label": "Trade Card number",
+      "type": "textfield",
+      "key": "tradeCardNumber",
+      "disabled": true
+    },
+    {
+      "label": "Discount band",
+      "type": "textfield",
+      "key": "discountBand",
+      "disabled": true
+    },
+    {
+      "label": "Discount (%)",
+      "type": "number",
+      "key": "discountPct",
+      "disabled": true
+    },
+    {
+      "label": "I confirm my membership details are correct",
+      "type": "checkbox",
+      "key": "acknowledged",
+      "validate": { "required": true }
+    }
+  ],
+  "type": "default",
+  "id": "form_confirm_card",
+  "executionPlatform": "Camunda Cloud",
+  "executionPlatformVersion": "8.8.0",
+  "schemaVersion": 18
+}

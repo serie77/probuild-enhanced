@@ -1,0 +1,21 @@
+{
+  "components": [
+    { "text": "## Hire a tool", "type": "text", "id": "ca_h" },
+    {
+      "label": "Tool",
+      "type": "select",
+      "key": "toolCode",
+      "values": [
+        { "label": "Cement Mixer 110L (MIX-110)", "value": "MIX-110" },
+        { "label": "Scaffold Tower 6m (SCF-T6)", "value": "SCF-T6" },
+        { "label": "Power Washer 2500psi (PWH-2500)", "value": "PWH-2500" },
+        { "label": "Table Saw TCT 100mm (TCT-100)", "value": "TCT-100" },
+        { "label": "Hammer Drill SDS Plus (HDD-SDS)", "value": "HDD-SDS" }
+      ],
+      "validate": { "required": true }
+    },
+    { "label": "Rental days", "type": "number", "key": "rentalDays", "validate": { "required": true, "min": 0.5, "max": 365 } }
+  ],
+  "type": "default", "id": "form_check_avail",
+  "executionPlatform": "Camunda Cloud", "executionPlatformVersion": "8.8.0", "schemaVersion": 18
+}

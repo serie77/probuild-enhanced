@@ -1,0 +1,10 @@
+{
+  "components": [
+    { "text": "## Item on backorder\nThis item is out of stock and has been placed on order with our supplier.", "type": "text", "id": "bo_h" },
+    { "label": "Purchase order", "type": "textfield", "key": "poNumber", "disabled": true },
+    { "label": "Supplier", "type": "textfield", "key": "supplierName", "disabled": true },
+    { "label": "I understand my order is delayed", "type": "checkbox", "key": "acknowledged", "validate": { "required": true } }
+  ],
+  "type": "default", "id": "form_backorder_ack",
+  "executionPlatform": "Camunda Cloud", "executionPlatformVersion": "8.8.0", "schemaVersion": 18
+}

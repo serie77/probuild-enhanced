@@ -1,0 +1,9 @@
+{
+  "components": [
+    { "text": "## Tool unavailable\nSorry, the tool you requested is not currently in stock.", "type": "text", "id": "hu_h" },
+    { "label": "Tool", "type": "textfield", "key": "toolName", "disabled": true },
+    { "label": "I understand", "type": "checkbox", "key": "acknowledged", "validate": { "required": true } }
+  ],
+  "type": "default", "id": "form_hire_unavail",
+  "executionPlatform": "Camunda Cloud", "executionPlatformVersion": "8.8.0", "schemaVersion": 18
+}

@@ -1,0 +1,34 @@
+{
+  "components": [
+    { "text": "## Payment", "type": "text", "id": "mp_h" },
+    { "label": "Amount due (£)", "type": "number", "key": "quotedPrice", "disabled": true },
+    {
+      "label": "Payment method",
+      "type": "radio",
+      "key": "paymentMethod",
+      "values": [
+        { "label": "Card", "value": "card" },
+        { "label": "Cash", "value": "cash" },
+        { "label": "Finance (FinTrust)", "value": "finance" }
+      ],
+      "validate": { "required": true }
+    },
+    {
+      "label": "Credit score",
+      "type": "number",
+      "key": "creditScore",
+      "conditional": { "hide": "=paymentMethod != \"finance\"" },
+      "validate": { "min": 0, "max": 999 }
+    },
+    {
+      "label": "Annual income (£)",
+      "type": "number",
+      "key": "annualIncome",
+      "conditional": { "hide": "=paymentMethod != \"finance\"" },
+      "validate": { "min": 0 }
+    },
+    { "label": "I authorise this payment", "type": "checkbox", "key": "paymentConsent", "validate": { "required": true } }
+  ],
+  "type": "default", "id": "form_make_payment",
+  "executionPlatform": "Camunda Cloud", "executionPlatformVersion": "8.8.0", "schemaVersion": 18
+}

@@ -1,0 +1,12 @@
+{
+  "components": [
+    { "text": "## Order confirmed", "type": "text", "id": "cp_h" },
+    { "label": "Order reference", "type": "textfield", "key": "orderReference", "disabled": true },
+    { "label": "Tracking number", "type": "textfield", "key": "trackingNumber", "disabled": true },
+    { "label": "Amount paid (£)", "type": "number", "key": "finalAmount", "disabled": true },
+    { "label": "Points balance", "type": "number", "key": "pointsBalance", "disabled": true },
+    { "label": "I confirm receipt of these details", "type": "checkbox", "key": "acknowledged", "validate": { "required": true } }
+  ],
+  "type": "default", "id": "form_confirm_purchase",
+  "executionPlatform": "Camunda Cloud", "executionPlatformVersion": "8.8.0", "schemaVersion": 18
+}

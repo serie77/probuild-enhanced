@@ -1,0 +1,12 @@
+{
+  "components": [
+    { "text": "## Pick order", "type": "text", "id": "pi_h" },
+    { "label": "Order reference", "type": "textfield", "key": "orderReference", "disabled": true },
+    { "label": "Product", "type": "textfield", "key": "productCode", "disabled": true },
+    { "label": "Bin location", "type": "textfield", "key": "binLocation", "disabled": true },
+    { "label": "Quantity picked", "type": "number", "key": "pickedQuantity", "validate": { "required": true, "min": 0 } },
+    { "label": "Picked by", "type": "textfield", "key": "pickerName", "validate": { "required": true } }
+  ],
+  "type": "default", "id": "form_pick_items",
+  "executionPlatform": "Camunda Cloud", "executionPlatformVersion": "8.8.0", "schemaVersion": 18
+}

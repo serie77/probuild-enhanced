@@ -1,0 +1,14 @@
+{
+  "components": [
+    { "text": "## FinTrust credit review\nThe automated engine has assessed this application. Confirm or override the decision.", "type": "text", "id": "fr_h" },
+    { "label": "Applicant", "type": "textfield", "key": "customerName", "disabled": true },
+    { "label": "Finance amount (£)", "type": "number", "key": "financeAmount", "disabled": true },
+    { "label": "Credit score", "type": "number", "key": "creditScore", "disabled": true },
+    { "label": "Engine recommendation", "type": "textfield", "key": "financeRecommendation", "disabled": true },
+    { "label": "Approve this application", "type": "checkbox", "key": "financeApproved" },
+    { "label": "Reviewer notes", "type": "textarea", "key": "reviewerNotes" },
+    { "label": "Reviewed by", "type": "textfield", "key": "reviewedByName", "validate": { "required": true } }
+  ],
+  "type": "default", "id": "form_finance_review",
+  "executionPlatform": "Camunda Cloud", "executionPlatformVersion": "8.8.0", "schemaVersion": 18
+}

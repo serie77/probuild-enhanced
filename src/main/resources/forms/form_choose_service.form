@@ -1,0 +1,48 @@
+{
+  "components": [
+    {
+      "text": "## Welcome to ProBuild Supplies\nTell us who you are and what you need today.",
+      "type": "text",
+      "id": "cs_intro"
+    },
+    {
+      "label": "Full name",
+      "type": "textfield",
+      "key": "customerName",
+      "validate": { "required": true, "minLength": 2 }
+    },
+    {
+      "label": "Email address",
+      "type": "textfield",
+      "key": "customerEmail",
+      "validate": { "required": true, "validationType": "email" }
+    },
+    {
+      "label": "Mobile number",
+      "type": "textfield",
+      "key": "customerPhone",
+      "validate": { "required": true, "pattern": "^[0-9 +()-]{7,20}$" }
+    },
+    {
+      "label": "What would you like to do?",
+      "type": "radio",
+      "key": "serviceType",
+      "values": [
+        { "label": "Buy building materials or tools", "value": "buy" },
+        { "label": "Hire a tool", "value": "hire" },
+        { "label": "Apply for a ProBuild Trade Card", "value": "apply_card" }
+      ],
+      "validate": { "required": true }
+    },
+    {
+      "label": "Send me trade offers by email",
+      "type": "checkbox",
+      "key": "marketingConsent"
+    }
+  ],
+  "type": "default",
+  "id": "form_choose_service",
+  "executionPlatform": "Camunda Cloud",
+  "executionPlatformVersion": "8.8.0",
+  "schemaVersion": 18
+}

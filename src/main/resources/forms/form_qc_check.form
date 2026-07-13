@@ -1,0 +1,12 @@
+{
+  "components": [
+    { "text": "## Quality check", "type": "text", "id": "qc_h" },
+    { "label": "Order reference", "type": "textfield", "key": "orderReference", "disabled": true },
+    { "label": "Quantity picked", "type": "number", "key": "pickedQuantity", "disabled": true },
+    { "label": "QC passed", "type": "checkbox", "key": "qcPassed" },
+    { "label": "QC notes", "type": "textarea", "key": "qcNotes" },
+    { "label": "Checked by", "type": "textfield", "key": "checkedByName", "validate": { "required": true } }
+  ],
+  "type": "default", "id": "form_qc_check",
+  "executionPlatform": "Camunda Cloud", "executionPlatformVersion": "8.8.0", "schemaVersion": 18
+}

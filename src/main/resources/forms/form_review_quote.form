@@ -1,0 +1,12 @@
+{
+  "components": [
+    { "text": "## Your quote", "type": "text", "id": "rq_h" },
+    { "label": "Quote reference", "type": "textfield", "key": "quoteReference", "disabled": true },
+    { "label": "Product", "type": "textfield", "key": "productName", "disabled": true },
+    { "label": "Total price (£)", "type": "number", "key": "quotedPrice", "disabled": true },
+    { "label": "Stock status", "type": "textfield", "key": "stockStatus", "disabled": true },
+    { "label": "Accept this quote", "type": "checkbox", "key": "quoteAccepted" }
+  ],
+  "type": "default", "id": "form_review_quote",
+  "executionPlatform": "Camunda Cloud", "executionPlatformVersion": "8.8.0", "schemaVersion": 18
+}

@@ -1,0 +1,56 @@
+{
+  "components": [
+    {
+      "text": "## Trade Card application",
+      "type": "text",
+      "id": "ac_intro"
+    },
+    {
+      "label": "Renewing an existing card?",
+      "type": "checkbox",
+      "key": "isRenewal"
+    },
+    {
+      "label": "Existing Trade Card number (renewals only)",
+      "type": "textfield",
+      "key": "tradeCardNumber",
+      "conditional": { "hide": "=not(isRenewal)" }
+    },
+    {
+      "label": "Full name",
+      "type": "textfield",
+      "key": "customerName",
+      "validate": { "required": true, "minLength": 2 }
+    },
+    {
+      "label": "Business name",
+      "type": "textfield",
+      "key": "businessName"
+    },
+    {
+      "label": "Email address",
+      "type": "textfield",
+      "key": "customerEmail",
+      "validate": { "required": true, "validationType": "email" }
+    },
+    {
+      "label": "Trade",
+      "type": "select",
+      "key": "tradeType",
+      "values": [
+        { "label": "Builder", "value": "builder" },
+        { "label": "Electrician", "value": "electrician" },
+        { "label": "Plumber", "value": "plumber" },
+        { "label": "Carpenter", "value": "carpenter" },
+        { "label": "Contractor", "value": "contractor" },
+        { "label": "Other", "value": "other" }
+      ],
+      "validate": { "required": true }
+    }
+  ],
+  "type": "default",
+  "id": "form_apply_card",
+  "executionPlatform": "Camunda Cloud",
+  "executionPlatformVersion": "8.8.0",
+  "schemaVersion": 18
+}

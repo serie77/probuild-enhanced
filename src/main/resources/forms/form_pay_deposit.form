@@ -1,0 +1,13 @@
+{
+  "components": [
+    { "text": "## Confirm hire booking", "type": "text", "id": "pd_h" },
+    { "label": "Booking reference", "type": "textfield", "key": "bookingReference", "disabled": true },
+    { "label": "Tool", "type": "textfield", "key": "toolName", "disabled": true },
+    { "label": "Pricing tier", "type": "textfield", "key": "tierLabel", "disabled": true },
+    { "label": "Rental fee (£)", "type": "number", "key": "rentalFee", "disabled": true },
+    { "label": "Deposit due (£)", "type": "number", "key": "depositAmount", "disabled": true },
+    { "label": "I authorise the deposit", "type": "checkbox", "key": "depositConsent", "validate": { "required": true } }
+  ],
+  "type": "default", "id": "form_pay_deposit",
+  "executionPlatform": "Camunda Cloud", "executionPlatformVersion": "8.8.0", "schemaVersion": 18
+}

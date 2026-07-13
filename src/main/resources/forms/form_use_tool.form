@@ -1,0 +1,9 @@
+{
+  "components": [
+    { "text": "## Tool issued\nYou have the tool for the agreed hire period.", "type": "text", "id": "ut_h" },
+    { "label": "Booking reference", "type": "textfield", "key": "bookingReference", "disabled": true },
+    { "label": "I have received the tool and safety checklist", "type": "checkbox", "key": "checklistReceived", "validate": { "required": true } }
+  ],
+  "type": "default", "id": "form_use_tool",
+  "executionPlatform": "Camunda Cloud", "executionPlatformVersion": "8.8.0", "schemaVersion": 18
+}
