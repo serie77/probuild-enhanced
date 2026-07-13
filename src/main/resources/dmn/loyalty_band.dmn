@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<definitions xmlns="https://www.omg.org/spec/DMN/20191111/MODEL/"
+             xmlns:dmndi="https://www.omg.org/spec/DMN/20191111/DMNDI/"
+             xmlns:dc="http://www.omg.org/spec/DMN/20180521/DC/"
+             id="drd_loyalty" name="Loyalty banding" namespace="http://probuild/dmn">
+  <decision id="loyalty_band" name="Loyalty discount band">
+    <decisionTable id="dt_loyalty" hitPolicy="FIRST">
+      <input id="in_hasCard" label="Has trade card">
+        <inputExpression id="ie_hasCard" typeRef="boolean"><text>hasCard</text></inputExpression>
+      </input>
+      <input id="in_points" label="Points balance">
+        <inputExpression id="ie_points" typeRef="number"><text>pointsBalance</text></inputExpression>
+      </input>
+      <output id="out_band" label="Discount band" name="discountBand" typeRef="string" />
+      <output id="out_pct" label="Discount %" name="discountPct" typeRef="number" />
+      <rule id="r_nocard">
+        <inputEntry id="r_nocard_1"><text>false</text></inputEntry>
+        <inputEntry id="r_nocard_2"><text>-</text></inputEntry>
+        <outputEntry id="r_nocard_3"><text>"None"</text></outputEntry>
+        <outputEntry id="r_nocard_4"><text>0</text></outputEntry>
+      </rule>
+      <rule id="r_gold">
+        <inputEntry id="r_gold_1"><text>true</text></inputEntry>
+        <inputEntry id="r_gold_2"><text>&gt;= 2000</text></inputEntry>
+        <outputEntry id="r_gold_3"><text>"Gold"</text></outputEntry>
+        <outputEntry id="r_gold_4"><text>10</text></outputEntry>
+      </rule>
+      <rule id="r_silver">
+        <inputEntry id="r_silver_1"><text>true</text></inputEntry>
+        <inputEntry id="r_silver_2"><text>[500..2000)</text></inputEntry>
+        <outputEntry id="r_silver_3"><text>"Silver"</text></outputEntry>
+        <outputEntry id="r_silver_4"><text>5</text></outputEntry>
+      </rule>
+      <rule id="r_bronze">
+        <inputEntry id="r_bronze_1"><text>true</text></inputEntry>
+        <inputEntry id="r_bronze_2"><text>&lt; 500</text></inputEntry>
+        <outputEntry id="r_bronze_3"><text>"Bronze"</text></outputEntry>
+        <outputEntry id="r_bronze_4"><text>2</text></outputEntry>
+      </rule>
+    </decisionTable>
+  </decision>
+</definitions>

@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<definitions xmlns="https://www.omg.org/spec/DMN/20191111/MODEL/"
+             id="drd_triage" name="Maintenance triage" namespace="http://probuild/dmn">
+  <decision id="maintenance_triage" name="FixPro batch triage">
+    <decisionTable id="dt_triage" hitPolicy="FIRST">
+      <input id="mt_in_count" label="Tools in batch">
+        <inputExpression id="mt_ie_count" typeRef="number"><text>toolCount</text></inputExpression>
+      </input>
+      <output id="mt_out_oos" label="Out of service" name="outOfServiceCount" typeRef="number" />
+      <output id="mt_out_repair" label="Repair" name="repairCount" typeRef="number" />
+      <output id="mt_out_routine" label="Routine" name="routineCount" typeRef="number" />
+      <rule id="mt_r">
+        <inputEntry id="mt_r_i"><text>-</text></inputEntry>
+        <outputEntry id="mt_r_oos"><text>floor(toolCount * 0.05)</text></outputEntry>
+        <outputEntry id="mt_r_rep"><text>floor(toolCount * 0.25)</text></outputEntry>
+        <outputEntry id="mt_r_rou"><text>toolCount - floor(toolCount * 0.05) - floor(toolCount * 0.25)</text></outputEntry>
+      </rule>
+    </decisionTable>
+  </decision>
+</definitions>

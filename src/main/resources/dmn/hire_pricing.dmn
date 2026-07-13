@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<definitions xmlns="https://www.omg.org/spec/DMN/20191111/MODEL/"
+             id="drd_hire" name="Hire pricing" namespace="http://probuild/dmn">
+  <decision id="hire_pricing" name="Tiered hire pricing">
+    <decisionTable id="dt_hire" hitPolicy="FIRST">
+      <input id="hp_in_days" label="Rental days">
+        <inputExpression id="hp_ie_days" typeRef="number"><text>rentalDays</text></inputExpression>
+      </input>
+      <output id="hp_out_mult" label="Tier multiplier" name="tierMultiplier" typeRef="number" />
+      <output id="hp_out_label" label="Tier" name="tierLabel" typeRef="string" />
+      <rule id="hp_half"><inputEntry id="hp_half_i"><text>&lt;= 0.5</text></inputEntry><outputEntry id="hp_half_m"><text>0.60</text></outputEntry><outputEntry id="hp_half_l"><text>"Half day"</text></outputEntry></rule>
+      <rule id="hp_1"><inputEntry id="hp_1_i"><text>&lt;= 1</text></inputEntry><outputEntry id="hp_1_m"><text>1.00</text></outputEntry><outputEntry id="hp_1_l"><text>"1 day"</text></outputEntry></rule>
+      <rule id="hp_3"><inputEntry id="hp_3_i"><text>&lt;= 3</text></inputEntry><outputEntry id="hp_3_m"><text>0.90</text></outputEntry><outputEntry id="hp_3_l"><text>"2-3 days"</text></outputEntry></rule>
+      <rule id="hp_7"><inputEntry id="hp_7_i"><text>&lt;= 7</text></inputEntry><outputEntry id="hp_7_m"><text>0.80</text></outputEntry><outputEntry id="hp_7_l"><text>"4-7 days"</text></outputEntry></rule>
+      <rule id="hp_14"><inputEntry id="hp_14_i"><text>&lt;= 14</text></inputEntry><outputEntry id="hp_14_m"><text>0.70</text></outputEntry><outputEntry id="hp_14_l"><text>"8-14 days"</text></outputEntry></rule>
+      <rule id="hp_30"><inputEntry id="hp_30_i"><text>&lt;= 30</text></inputEntry><outputEntry id="hp_30_m"><text>0.60</text></outputEntry><outputEntry id="hp_30_l"><text>"15-30 days"</text></outputEntry></rule>
+      <rule id="hp_max"><inputEntry id="hp_max_i"><text>-</text></inputEntry><outputEntry id="hp_max_m"><text>0.50</text></outputEntry><outputEntry id="hp_max_l"><text>"30+ days"</text></outputEntry></rule>
+    </decisionTable>
+  </decision>
+</definitions>

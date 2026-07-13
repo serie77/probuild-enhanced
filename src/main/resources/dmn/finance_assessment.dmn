@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<definitions xmlns="https://www.omg.org/spec/DMN/20191111/MODEL/"
+             id="drd_finance" name="Finance assessment" namespace="http://probuild/dmn">
+  <decision id="finance_assessment" name="Finance credit assessment">
+    <decisionTable id="dt_finance" hitPolicy="FIRST">
+      <input id="fin_in_score" label="Credit score">
+        <inputExpression id="fin_ie_score" typeRef="number"><text>creditScore</text></inputExpression>
+      </input>
+      <input id="fin_in_afford" label="Income covers amount">
+        <inputExpression id="fin_ie_afford" typeRef="boolean"><text>annualIncome &gt;= financeAmount</text></inputExpression>
+      </input>
+      <output id="fin_out_rec" label="Recommendation" name="financeRecommendation" typeRef="string" />
+      <output id="fin_out_term" label="Term (months)" name="termMonths" typeRef="number" />
+      <rule id="fin_r_afford">
+        <inputEntry id="fin_r_afford_1"><text>-</text></inputEntry>
+        <inputEntry id="fin_r_afford_2"><text>false</text></inputEntry>
+        <outputEntry id="fin_r_afford_3"><text>"DECLINE"</text></outputEntry>
+        <outputEntry id="fin_r_afford_4"><text>if financeAmount &gt;= 500 then 12 else 6</text></outputEntry>
+      </rule>
+      <rule id="fin_r_lowscore">
+        <inputEntry id="fin_r_lowscore_1"><text>&lt; 550</text></inputEntry>
+        <inputEntry id="fin_r_lowscore_2"><text>-</text></inputEntry>
+        <outputEntry id="fin_r_lowscore_3"><text>"DECLINE"</text></outputEntry>
+        <outputEntry id="fin_r_lowscore_4"><text>if financeAmount &gt;= 500 then 12 else 6</text></outputEntry>
+      </rule>
+      <rule id="fin_r_approve">
+        <inputEntry id="fin_r_approve_1"><text>&gt;= 700</text></inputEntry>
+        <inputEntry id="fin_r_approve_2"><text>true</text></inputEntry>
+        <outputEntry id="fin_r_approve_3"><text>"APPROVE"</text></outputEntry>
+        <outputEntry id="fin_r_approve_4"><text>if financeAmount &gt;= 500 then 12 else 6</text></outputEntry>
+      </rule>
+      <rule id="fin_r_refer">
+        <inputEntry id="fin_r_refer_1"><text>[550..700)</text></inputEntry>
+        <inputEntry id="fin_r_refer_2"><text>true</text></inputEntry>
+        <outputEntry id="fin_r_refer_3"><text>"REFER"</text></outputEntry>
+        <outputEntry id="fin_r_refer_4"><text>if financeAmount &gt;= 500 then 12 else 6</text></outputEntry>
+      </rule>
+    </decisionTable>
+  </decision>
+</definitions>
