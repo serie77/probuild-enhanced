@@ -1,0 +1,169 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" xmlns:zeebe="http://camunda.org/schema/zeebe/1.0" id="defs_cap_warehouse" targetNamespace="http://probuild/platform">
+  <bpmn:process id="Cap_Warehouse" name="Warehouse Capability" isExecutable="true">
+    <bpmn:startEvent id="Wh_Start" name="Warehouse invoked">
+      <bpmn:outgoing>w_f0</bpmn:outgoing>
+    </bpmn:startEvent>
+    <bpmn:exclusiveGateway id="Wh_Mode" name="Fulfil or return?" default="w_fulfil">
+      <bpmn:incoming>w_f0</bpmn:incoming>
+      <bpmn:outgoing>w_return</bpmn:outgoing>
+      <bpmn:outgoing>w_fulfil</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:serviceTask id="Wh_CreateOrder" name="Create order">
+      <bpmn:extensionElements>
+        <zeebe:taskDefinition type="warehouse-create-order" />
+      </bpmn:extensionElements>
+      <bpmn:incoming>w_fulfil</bpmn:incoming>
+      <bpmn:outgoing>w_f2</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:userTask id="Wh_Pick" name="Pick items">
+      <bpmn:extensionElements>
+        <zeebe:userTask />
+        <zeebe:formDefinition formId="form_pick_items" />
+      </bpmn:extensionElements>
+      <bpmn:incoming>w_f2</bpmn:incoming>
+      <bpmn:incoming>w_repick</bpmn:incoming>
+      <bpmn:outgoing>w_f3</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:userTask id="Wh_QC" name="Quality check">
+      <bpmn:extensionElements>
+        <zeebe:userTask />
+        <zeebe:formDefinition formId="form_qc_check" />
+      </bpmn:extensionElements>
+      <bpmn:incoming>w_f3</bpmn:incoming>
+      <bpmn:outgoing>w_f4</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:exclusiveGateway id="Wh_QcPass" name="QC passed?" default="w_repick">
+      <bpmn:incoming>w_f4</bpmn:incoming>
+      <bpmn:outgoing>w_pass</bpmn:outgoing>
+      <bpmn:outgoing>w_repick</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:serviceTask id="Wh_Dispatch" name="Dispatch goods">
+      <bpmn:extensionElements>
+        <zeebe:taskDefinition type="warehouse-dispatch" />
+      </bpmn:extensionElements>
+      <bpmn:incoming>w_pass</bpmn:incoming>
+      <bpmn:outgoing>w_f5</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:endEvent id="Wh_EndFulfil" name="Order fulfilled">
+      <bpmn:incoming>w_f5</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:userTask id="Wh_Inspect" name="Inspect returned tool">
+      <bpmn:extensionElements>
+        <zeebe:userTask />
+        <zeebe:formDefinition formId="form_inspect_tool" />
+      </bpmn:extensionElements>
+      <bpmn:incoming>w_return</bpmn:incoming>
+      <bpmn:outgoing>w_f6</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:serviceTask id="Wh_Restock" name="Assess return">
+      <bpmn:extensionElements>
+        <zeebe:taskDefinition type="warehouse-assess-return" />
+      </bpmn:extensionElements>
+      <bpmn:incoming>w_f6</bpmn:incoming>
+      <bpmn:outgoing>w_f7</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:endEvent id="Wh_EndReturn" name="Return processed">
+      <bpmn:incoming>w_f7</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:sequenceFlow id="w_f0" sourceRef="Wh_Start" targetRef="Wh_Mode" />
+    <bpmn:sequenceFlow id="w_return" name="return" sourceRef="Wh_Mode" targetRef="Wh_Inspect">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">=fulfilMode = "RETURN"</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="w_fulfil" name="fulfil" sourceRef="Wh_Mode" targetRef="Wh_CreateOrder" />
+    <bpmn:sequenceFlow id="w_f2" sourceRef="Wh_CreateOrder" targetRef="Wh_Pick" />
+    <bpmn:sequenceFlow id="w_f3" sourceRef="Wh_Pick" targetRef="Wh_QC" />
+    <bpmn:sequenceFlow id="w_f4" sourceRef="Wh_QC" targetRef="Wh_QcPass" />
+    <bpmn:sequenceFlow id="w_pass" name="pass" sourceRef="Wh_QcPass" targetRef="Wh_Dispatch">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">=qcPassed = true</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="w_repick" name="re-pick" sourceRef="Wh_QcPass" targetRef="Wh_Pick" />
+    <bpmn:sequenceFlow id="w_f5" sourceRef="Wh_Dispatch" targetRef="Wh_EndFulfil" />
+    <bpmn:sequenceFlow id="w_f6" sourceRef="Wh_Inspect" targetRef="Wh_Restock" />
+    <bpmn:sequenceFlow id="w_f7" sourceRef="Wh_Restock" targetRef="Wh_EndReturn" />
+  </bpmn:process>
+  <bpmndi:BPMNDiagram id="BPMNDiagram_Cap_Warehouse">
+    <bpmndi:BPMNPlane id="BPMNPlane_Cap_Warehouse" bpmnElement="Cap_Warehouse">
+      <bpmndi:BPMNShape id="Wh_Start_di" bpmnElement="Wh_Start">
+        <dc:Bounds x="57" y="52" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Wh_Mode_di" bpmnElement="Wh_Mode" isMarkerVisible="true">
+        <dc:Bounds x="200" y="45" width="50" height="50" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Wh_Inspect_di" bpmnElement="Wh_Inspect">
+        <dc:Bounds x="325" y="30" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Wh_Restock_di" bpmnElement="Wh_Restock">
+        <dc:Bounds x="475" y="30" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Wh_EndReturn_di" bpmnElement="Wh_EndReturn">
+        <dc:Bounds x="657" y="52" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Wh_CreateOrder_di" bpmnElement="Wh_CreateOrder">
+        <dc:Bounds x="325" y="170" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Wh_Pick_di" bpmnElement="Wh_Pick">
+        <dc:Bounds x="475" y="170" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Wh_QC_di" bpmnElement="Wh_QC">
+        <dc:Bounds x="625" y="170" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Wh_QcPass_di" bpmnElement="Wh_QcPass" isMarkerVisible="true">
+        <dc:Bounds x="800" y="185" width="50" height="50" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Wh_Dispatch_di" bpmnElement="Wh_Dispatch">
+        <dc:Bounds x="925" y="170" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Wh_EndFulfil_di" bpmnElement="Wh_EndFulfil">
+        <dc:Bounds x="1107" y="192" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="w_f0_di" bpmnElement="w_f0">
+        <di:waypoint x="93" y="70" />
+        <di:waypoint x="200" y="70" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="w_return_di" bpmnElement="w_return">
+        <di:waypoint x="250" y="70" />
+        <di:waypoint x="325" y="70" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="w_fulfil_di" bpmnElement="w_fulfil">
+        <di:waypoint x="225" y="95" />
+        <di:waypoint x="225" y="210" />
+        <di:waypoint x="325" y="210" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="w_f6_di" bpmnElement="w_f6">
+        <di:waypoint x="425" y="70" />
+        <di:waypoint x="475" y="70" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="w_f7_di" bpmnElement="w_f7">
+        <di:waypoint x="575" y="70" />
+        <di:waypoint x="657" y="70" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="w_f2_di" bpmnElement="w_f2">
+        <di:waypoint x="425" y="210" />
+        <di:waypoint x="475" y="210" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="w_f3_di" bpmnElement="w_f3">
+        <di:waypoint x="575" y="210" />
+        <di:waypoint x="625" y="210" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="w_f4_di" bpmnElement="w_f4">
+        <di:waypoint x="725" y="210" />
+        <di:waypoint x="800" y="210" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="w_pass_di" bpmnElement="w_pass">
+        <di:waypoint x="850" y="210" />
+        <di:waypoint x="925" y="210" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="w_repick_di" bpmnElement="w_repick">
+        <di:waypoint x="825" y="185" />
+        <di:waypoint x="825" y="140" />
+        <di:waypoint x="525" y="140" />
+        <di:waypoint x="525" y="170" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="w_f5_di" bpmnElement="w_f5">
+        <di:waypoint x="1025" y="210" />
+        <di:waypoint x="1107" y="210" />
+      </bpmndi:BPMNEdge>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+</bpmn:definitions>

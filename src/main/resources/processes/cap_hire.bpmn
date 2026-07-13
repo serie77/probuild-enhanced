@@ -1,0 +1,113 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" xmlns:zeebe="http://camunda.org/schema/zeebe/1.0" id="defs_cap_hire" targetNamespace="http://probuild/platform">
+  <bpmn:process id="Cap_Hire" name="Tool Hire Capability" isExecutable="true">
+    <bpmn:startEvent id="Hi_Start" name="Hire invoked">
+      <bpmn:outgoing>h_f1</bpmn:outgoing>
+    </bpmn:startEvent>
+    <bpmn:serviceTask id="Hi_Verify" name="Verify availability">
+      <bpmn:extensionElements>
+        <zeebe:taskDefinition type="hire-verify-availability" />
+      </bpmn:extensionElements>
+      <bpmn:incoming>h_f1</bpmn:incoming>
+      <bpmn:outgoing>h_f2</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:exclusiveGateway id="Hi_Avail" name="Available?" default="h_unavail">
+      <bpmn:incoming>h_f2</bpmn:incoming>
+      <bpmn:outgoing>h_avail</bpmn:outgoing>
+      <bpmn:outgoing>h_unavail</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:businessRuleTask id="Hi_Price" name="Price hire (tiered)">
+      <bpmn:extensionElements>
+        <zeebe:calledDecision decisionId="hire_pricing" resultVariable="hireTier" />
+      </bpmn:extensionElements>
+      <bpmn:incoming>h_avail</bpmn:incoming>
+      <bpmn:outgoing>h_f3</bpmn:outgoing>
+    </bpmn:businessRuleTask>
+    <bpmn:serviceTask id="Hi_Book" name="Confirm booking">
+      <bpmn:extensionElements>
+        <zeebe:taskDefinition type="hire-confirm-booking" />
+      </bpmn:extensionElements>
+      <bpmn:incoming>h_f3</bpmn:incoming>
+      <bpmn:outgoing>h_f4</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:endEvent id="Hi_EndBooked" name="Tool booked">
+      <bpmn:incoming>h_f4</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:serviceTask id="Hi_Unavail" name="Flag unavailable">
+      <bpmn:extensionElements>
+        <zeebe:taskDefinition type="hire-flag-unavailable" />
+      </bpmn:extensionElements>
+      <bpmn:incoming>h_unavail</bpmn:incoming>
+      <bpmn:outgoing>h_f5</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:endEvent id="Hi_EndUnavail" name="Not available">
+      <bpmn:incoming>h_f5</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:sequenceFlow id="h_f1" sourceRef="Hi_Start" targetRef="Hi_Verify" />
+    <bpmn:sequenceFlow id="h_f2" sourceRef="Hi_Verify" targetRef="Hi_Avail" />
+    <bpmn:sequenceFlow id="h_avail" name="available" sourceRef="Hi_Avail" targetRef="Hi_Price">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">=toolAvailable = true</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="h_unavail" name="unavailable" sourceRef="Hi_Avail" targetRef="Hi_Unavail" />
+    <bpmn:sequenceFlow id="h_f3" sourceRef="Hi_Price" targetRef="Hi_Book" />
+    <bpmn:sequenceFlow id="h_f4" sourceRef="Hi_Book" targetRef="Hi_EndBooked" />
+    <bpmn:sequenceFlow id="h_f5" sourceRef="Hi_Unavail" targetRef="Hi_EndUnavail" />
+  </bpmn:process>
+  <bpmndi:BPMNDiagram id="BPMNDiagram_Cap_Hire">
+    <bpmndi:BPMNPlane id="BPMNPlane_Cap_Hire" bpmnElement="Cap_Hire">
+      <bpmndi:BPMNShape id="Hi_Start_di" bpmnElement="Hi_Start">
+        <dc:Bounds x="57" y="52" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Hi_Verify_di" bpmnElement="Hi_Verify">
+        <dc:Bounds x="175" y="30" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Hi_Avail_di" bpmnElement="Hi_Avail" isMarkerVisible="true">
+        <dc:Bounds x="350" y="45" width="50" height="50" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Hi_Price_di" bpmnElement="Hi_Price">
+        <dc:Bounds x="475" y="30" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Hi_Book_di" bpmnElement="Hi_Book">
+        <dc:Bounds x="625" y="30" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Hi_EndBooked_di" bpmnElement="Hi_EndBooked">
+        <dc:Bounds x="807" y="52" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Hi_Unavail_di" bpmnElement="Hi_Unavail">
+        <dc:Bounds x="475" y="170" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Hi_EndUnavail_di" bpmnElement="Hi_EndUnavail">
+        <dc:Bounds x="657" y="192" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="h_f1_di" bpmnElement="h_f1">
+        <di:waypoint x="93" y="70" />
+        <di:waypoint x="175" y="70" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="h_f2_di" bpmnElement="h_f2">
+        <di:waypoint x="275" y="70" />
+        <di:waypoint x="350" y="70" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="h_avail_di" bpmnElement="h_avail">
+        <di:waypoint x="400" y="70" />
+        <di:waypoint x="475" y="70" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="h_unavail_di" bpmnElement="h_unavail">
+        <di:waypoint x="375" y="95" />
+        <di:waypoint x="375" y="210" />
+        <di:waypoint x="475" y="210" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="h_f3_di" bpmnElement="h_f3">
+        <di:waypoint x="575" y="70" />
+        <di:waypoint x="625" y="70" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="h_f4_di" bpmnElement="h_f4">
+        <di:waypoint x="725" y="70" />
+        <di:waypoint x="807" y="70" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="h_f5_di" bpmnElement="h_f5">
+        <di:waypoint x="575" y="210" />
+        <di:waypoint x="657" y="210" />
+      </bpmndi:BPMNEdge>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+</bpmn:definitions>

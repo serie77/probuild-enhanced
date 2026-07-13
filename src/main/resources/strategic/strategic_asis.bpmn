@@ -1,0 +1,341 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<bpmn:definitions xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL"
+                  id="defs_strategic" targetNamespace="http://probuild/platform">
+
+  <!-- STRATEGIC AS-IS: the client's current manual, disconnected process.
+       Every cross-pool hand-off is a phone call or a fax; loyalty is reconciled
+       in a spreadsheet after the fact; returned tools wait until someone books FixPro. -->
+  <bpmn:collaboration id="Collab_AsIs">
+    <bpmn:participant id="AS_Pool_Customer" name="Customer" processRef="AsIs_Customer" />
+    <bpmn:participant id="AS_Pool_ProBuild" name="ProBuild (counter &amp; back office)" processRef="AsIs_ProBuild" />
+    <bpmn:participant id="AS_Pool_Warehouse" name="Warehouse" processRef="AsIs_Warehouse" />
+    <bpmn:participant id="AS_Pool_FinTrust" name="FinTrust UK" processRef="AsIs_FinTrust" />
+    <bpmn:participant id="AS_Pool_FixPro" name="FixPro Ltd" processRef="AsIs_FixPro" />
+    <bpmn:messageFlow id="asmf_enq" name="enquiry (in store / phone)" sourceRef="AS_C_Enquire" targetRef="AS_P_Take" />
+    <bpmn:messageFlow id="asmf_stockcall" name="phone: in stock?" sourceRef="AS_P_PhoneWh" targetRef="AS_W_Check" />
+    <bpmn:messageFlow id="asmf_stockback" name="phone: stock level" sourceRef="AS_W_Report" targetRef="AS_P_Quote" />
+    <bpmn:messageFlow id="asmf_quote" name="verbal / paper quote" sourceRef="AS_P_Quote" targetRef="AS_C_Quote" />
+    <bpmn:messageFlow id="asmf_fax" name="fax finance application" sourceRef="AS_P_FaxFin" targetRef="AS_F_Receive" />
+    <bpmn:messageFlow id="asmf_faxback" name="fax / phone decision" sourceRef="AS_F_Decide" targetRef="AS_P_Chase" />
+    <bpmn:messageFlow id="asmf_goods" name="hand over goods" sourceRef="AS_P_Release" targetRef="AS_C_Collect" />
+    <bpmn:messageFlow id="asmf_book" name="phone: book weekly visit" sourceRef="AS_P_BookFix" targetRef="AS_X_Visit" />
+  </bpmn:collaboration>
+
+  <bpmn:process id="AsIs_Customer" name="Customer" isExecutable="false">
+    <bpmn:startEvent id="AS_C_Start"><bpmn:outgoing>ac1</bpmn:outgoing></bpmn:startEvent>
+    <bpmn:task id="AS_C_Enquire" name="Enquire about product / tool"><bpmn:incoming>ac1</bpmn:incoming><bpmn:outgoing>ac2</bpmn:outgoing></bpmn:task>
+    <bpmn:task id="AS_C_Quote" name="Receive verbal quote"><bpmn:incoming>ac2</bpmn:incoming><bpmn:outgoing>ac3</bpmn:outgoing></bpmn:task>
+    <bpmn:task id="AS_C_Pay" name="Pay / apply for finance"><bpmn:incoming>ac3</bpmn:incoming><bpmn:outgoing>ac4</bpmn:outgoing></bpmn:task>
+    <bpmn:task id="AS_C_Collect" name="Collect goods / take tool"><bpmn:incoming>ac4</bpmn:incoming><bpmn:outgoing>ac5</bpmn:outgoing></bpmn:task>
+    <bpmn:endEvent id="AS_C_End"><bpmn:incoming>ac5</bpmn:incoming></bpmn:endEvent>
+    <bpmn:sequenceFlow id="ac1" sourceRef="AS_C_Start" targetRef="AS_C_Enquire" />
+    <bpmn:sequenceFlow id="ac2" sourceRef="AS_C_Enquire" targetRef="AS_C_Quote" />
+    <bpmn:sequenceFlow id="ac3" sourceRef="AS_C_Quote" targetRef="AS_C_Pay" />
+    <bpmn:sequenceFlow id="ac4" sourceRef="AS_C_Pay" targetRef="AS_C_Collect" />
+    <bpmn:sequenceFlow id="ac5" sourceRef="AS_C_Collect" targetRef="AS_C_End" />
+  </bpmn:process>
+
+  <bpmn:process id="AsIs_ProBuild" name="ProBuild" isExecutable="false">
+    <bpmn:startEvent id="AS_P_Start"><bpmn:outgoing>ap1</bpmn:outgoing></bpmn:startEvent>
+    <bpmn:task id="AS_P_Take" name="Take enquiry at counter"><bpmn:incoming>ap1</bpmn:incoming><bpmn:outgoing>ap2</bpmn:outgoing></bpmn:task>
+    <bpmn:manualTask id="AS_P_PhoneWh" name="Phone warehouse to check stock"><bpmn:incoming>ap2</bpmn:incoming><bpmn:outgoing>ap3</bpmn:outgoing></bpmn:manualTask>
+    <bpmn:manualTask id="AS_P_Quote" name="Write quote by hand"><bpmn:incoming>ap3</bpmn:incoming><bpmn:outgoing>ap4</bpmn:outgoing></bpmn:manualTask>
+    <bpmn:manualTask id="AS_P_FaxFin" name="Fax finance application to FinTrust"><bpmn:incoming>ap4</bpmn:incoming><bpmn:outgoing>ap5</bpmn:outgoing></bpmn:manualTask>
+    <bpmn:manualTask id="AS_P_Chase" name="Chase FinTrust by phone"><bpmn:incoming>ap5</bpmn:incoming><bpmn:outgoing>ap6</bpmn:outgoing></bpmn:manualTask>
+    <bpmn:manualTask id="AS_P_Loyalty" name="Reconcile loyalty points in spreadsheet"><bpmn:incoming>ap6</bpmn:incoming><bpmn:outgoing>ap7</bpmn:outgoing></bpmn:manualTask>
+    <bpmn:task id="AS_P_Release" name="Release goods to customer"><bpmn:incoming>ap7</bpmn:incoming><bpmn:outgoing>ap8</bpmn:outgoing></bpmn:task>
+    <bpmn:manualTask id="AS_P_BookFix" name="Book FixPro when tools pile up"><bpmn:incoming>ap8</bpmn:incoming><bpmn:outgoing>ap9</bpmn:outgoing></bpmn:manualTask>
+    <bpmn:endEvent id="AS_P_End"><bpmn:incoming>ap9</bpmn:incoming></bpmn:endEvent>
+    <bpmn:sequenceFlow id="ap1" sourceRef="AS_P_Start" targetRef="AS_P_Take" />
+    <bpmn:sequenceFlow id="ap2" sourceRef="AS_P_Take" targetRef="AS_P_PhoneWh" />
+    <bpmn:sequenceFlow id="ap3" sourceRef="AS_P_PhoneWh" targetRef="AS_P_Quote" />
+    <bpmn:sequenceFlow id="ap4" sourceRef="AS_P_Quote" targetRef="AS_P_FaxFin" />
+    <bpmn:sequenceFlow id="ap5" sourceRef="AS_P_FaxFin" targetRef="AS_P_Chase" />
+    <bpmn:sequenceFlow id="ap6" sourceRef="AS_P_Chase" targetRef="AS_P_Loyalty" />
+    <bpmn:sequenceFlow id="ap7" sourceRef="AS_P_Loyalty" targetRef="AS_P_Release" />
+    <bpmn:sequenceFlow id="ap8" sourceRef="AS_P_Release" targetRef="AS_P_BookFix" />
+    <bpmn:sequenceFlow id="ap9" sourceRef="AS_P_BookFix" targetRef="AS_P_End" />
+  </bpmn:process>
+
+  <bpmn:process id="AsIs_Warehouse" name="Warehouse" isExecutable="false">
+    <bpmn:startEvent id="AS_W_Start"><bpmn:outgoing>aw1</bpmn:outgoing></bpmn:startEvent>
+    <bpmn:manualTask id="AS_W_Check" name="Walk the aisles to check stock"><bpmn:incoming>aw1</bpmn:incoming><bpmn:outgoing>aw2</bpmn:outgoing></bpmn:manualTask>
+    <bpmn:manualTask id="AS_W_Report" name="Report stock level by phone"><bpmn:incoming>aw2</bpmn:incoming><bpmn:outgoing>aw3</bpmn:outgoing></bpmn:manualTask>
+    <bpmn:endEvent id="AS_W_End"><bpmn:incoming>aw3</bpmn:incoming></bpmn:endEvent>
+    <bpmn:sequenceFlow id="aw1" sourceRef="AS_W_Start" targetRef="AS_W_Check" />
+    <bpmn:sequenceFlow id="aw2" sourceRef="AS_W_Check" targetRef="AS_W_Report" />
+    <bpmn:sequenceFlow id="aw3" sourceRef="AS_W_Report" targetRef="AS_W_End" />
+  </bpmn:process>
+
+  <bpmn:process id="AsIs_FinTrust" name="FinTrust UK" isExecutable="false">
+    <bpmn:startEvent id="AS_F_Start"><bpmn:outgoing>af1</bpmn:outgoing></bpmn:startEvent>
+    <bpmn:task id="AS_F_Receive" name="Receive faxed application"><bpmn:incoming>af1</bpmn:incoming><bpmn:outgoing>af2</bpmn:outgoing></bpmn:task>
+    <bpmn:manualTask id="AS_F_Assess" name="Assess application by hand"><bpmn:incoming>af2</bpmn:incoming><bpmn:outgoing>af3</bpmn:outgoing></bpmn:manualTask>
+    <bpmn:manualTask id="AS_F_Decide" name="Fax / phone decision back"><bpmn:incoming>af3</bpmn:incoming><bpmn:outgoing>af4</bpmn:outgoing></bpmn:manualTask>
+    <bpmn:endEvent id="AS_F_End"><bpmn:incoming>af4</bpmn:incoming></bpmn:endEvent>
+    <bpmn:sequenceFlow id="af1" sourceRef="AS_F_Start" targetRef="AS_F_Receive" />
+    <bpmn:sequenceFlow id="af2" sourceRef="AS_F_Receive" targetRef="AS_F_Assess" />
+    <bpmn:sequenceFlow id="af3" sourceRef="AS_F_Assess" targetRef="AS_F_Decide" />
+    <bpmn:sequenceFlow id="af4" sourceRef="AS_F_Decide" targetRef="AS_F_End" />
+  </bpmn:process>
+
+  <bpmn:process id="AsIs_FixPro" name="FixPro Ltd" isExecutable="false">
+    <bpmn:startEvent id="AS_X_Start"><bpmn:outgoing>ax1</bpmn:outgoing></bpmn:startEvent>
+    <bpmn:task id="AS_X_Visit" name="Make weekly site visit"><bpmn:incoming>ax1</bpmn:incoming><bpmn:outgoing>ax2</bpmn:outgoing></bpmn:task>
+    <bpmn:manualTask id="AS_X_Service" name="Service tools left in the bay"><bpmn:incoming>ax2</bpmn:incoming><bpmn:outgoing>ax3</bpmn:outgoing></bpmn:manualTask>
+    <bpmn:endEvent id="AS_X_End"><bpmn:incoming>ax3</bpmn:incoming></bpmn:endEvent>
+    <bpmn:sequenceFlow id="ax1" sourceRef="AS_X_Start" targetRef="AS_X_Visit" />
+    <bpmn:sequenceFlow id="ax2" sourceRef="AS_X_Visit" targetRef="AS_X_Service" />
+    <bpmn:sequenceFlow id="ax3" sourceRef="AS_X_Service" targetRef="AS_X_End" />
+  </bpmn:process>
+  <bpmndi:BPMNDiagram id="BPMNDiagram_Collab_AsIs">
+    <bpmndi:BPMNPlane id="BPMNPlane_Collab_AsIs" bpmnElement="Collab_AsIs">
+      <bpmndi:BPMNShape id="AS_Pool_Customer_di" bpmnElement="AS_Pool_Customer" isHorizontal="true">
+        <dc:Bounds x="0" y="0.00" width="876.00" height="140.00" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="AS_Pool_ProBuild_di" bpmnElement="AS_Pool_ProBuild" isHorizontal="true">
+        <dc:Bounds x="0" y="200.00" width="1476.00" height="140.00" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="AS_Pool_Warehouse_di" bpmnElement="AS_Pool_Warehouse" isHorizontal="true">
+        <dc:Bounds x="0" y="400.00" width="576.00" height="140.00" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="AS_Pool_FinTrust_di" bpmnElement="AS_Pool_FinTrust" isHorizontal="true">
+        <dc:Bounds x="0" y="600.00" width="726.00" height="140.00" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="AS_Pool_FixPro_di" bpmnElement="AS_Pool_FixPro" isHorizontal="true">
+        <dc:Bounds x="0" y="800.00" width="576.00" height="140.00" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="AS_C_Start_di" bpmnElement="AS_C_Start">
+        <dc:Bounds x="60.00" y="52.00" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="AS_C_Enquire_di" bpmnElement="AS_C_Enquire">
+        <dc:Bounds x="178.00" y="30.00" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="AS_C_Quote_di" bpmnElement="AS_C_Quote">
+        <dc:Bounds x="328.00" y="30.00" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="AS_C_Pay_di" bpmnElement="AS_C_Pay">
+        <dc:Bounds x="478.00" y="30.00" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="AS_C_Collect_di" bpmnElement="AS_C_Collect">
+        <dc:Bounds x="628.00" y="30.00" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="AS_C_End_di" bpmnElement="AS_C_End">
+        <dc:Bounds x="810.00" y="52.00" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="AS_P_Start_di" bpmnElement="AS_P_Start">
+        <dc:Bounds x="60.00" y="252.00" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="AS_P_Take_di" bpmnElement="AS_P_Take">
+        <dc:Bounds x="178.00" y="230.00" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="AS_P_PhoneWh_di" bpmnElement="AS_P_PhoneWh">
+        <dc:Bounds x="328.00" y="230.00" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="AS_P_Quote_di" bpmnElement="AS_P_Quote">
+        <dc:Bounds x="478.00" y="230.00" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="AS_P_FaxFin_di" bpmnElement="AS_P_FaxFin">
+        <dc:Bounds x="628.00" y="230.00" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="AS_P_Chase_di" bpmnElement="AS_P_Chase">
+        <dc:Bounds x="778.00" y="230.00" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="AS_P_Loyalty_di" bpmnElement="AS_P_Loyalty">
+        <dc:Bounds x="928.00" y="230.00" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="AS_P_Release_di" bpmnElement="AS_P_Release">
+        <dc:Bounds x="1078.00" y="230.00" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="AS_P_BookFix_di" bpmnElement="AS_P_BookFix">
+        <dc:Bounds x="1228.00" y="230.00" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="AS_P_End_di" bpmnElement="AS_P_End">
+        <dc:Bounds x="1410.00" y="252.00" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="AS_W_Start_di" bpmnElement="AS_W_Start">
+        <dc:Bounds x="60.00" y="452.00" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="AS_W_Check_di" bpmnElement="AS_W_Check">
+        <dc:Bounds x="178.00" y="430.00" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="AS_W_Report_di" bpmnElement="AS_W_Report">
+        <dc:Bounds x="328.00" y="430.00" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="AS_W_End_di" bpmnElement="AS_W_End">
+        <dc:Bounds x="510.00" y="452.00" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="AS_F_Start_di" bpmnElement="AS_F_Start">
+        <dc:Bounds x="60.00" y="652.00" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="AS_F_Receive_di" bpmnElement="AS_F_Receive">
+        <dc:Bounds x="178.00" y="630.00" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="AS_F_Assess_di" bpmnElement="AS_F_Assess">
+        <dc:Bounds x="328.00" y="630.00" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="AS_F_Decide_di" bpmnElement="AS_F_Decide">
+        <dc:Bounds x="478.00" y="630.00" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="AS_F_End_di" bpmnElement="AS_F_End">
+        <dc:Bounds x="660.00" y="652.00" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="AS_X_Start_di" bpmnElement="AS_X_Start">
+        <dc:Bounds x="60.00" y="852.00" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="AS_X_Visit_di" bpmnElement="AS_X_Visit">
+        <dc:Bounds x="178.00" y="830.00" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="AS_X_Service_di" bpmnElement="AS_X_Service">
+        <dc:Bounds x="328.00" y="830.00" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="AS_X_End_di" bpmnElement="AS_X_End">
+        <dc:Bounds x="510.00" y="852.00" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="ac1_di" bpmnElement="ac1">
+        <di:waypoint x="96.00" y="70.00" />
+        <di:waypoint x="178.00" y="70.00" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="ac2_di" bpmnElement="ac2">
+        <di:waypoint x="278.00" y="70.00" />
+        <di:waypoint x="328.00" y="70.00" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="ac3_di" bpmnElement="ac3">
+        <di:waypoint x="428.00" y="70.00" />
+        <di:waypoint x="478.00" y="70.00" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="ac4_di" bpmnElement="ac4">
+        <di:waypoint x="578.00" y="70.00" />
+        <di:waypoint x="628.00" y="70.00" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="ac5_di" bpmnElement="ac5">
+        <di:waypoint x="728.00" y="70.00" />
+        <di:waypoint x="810.00" y="70.00" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="ap1_di" bpmnElement="ap1">
+        <di:waypoint x="96.00" y="270.00" />
+        <di:waypoint x="178.00" y="270.00" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="ap2_di" bpmnElement="ap2">
+        <di:waypoint x="278.00" y="270.00" />
+        <di:waypoint x="328.00" y="270.00" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="ap3_di" bpmnElement="ap3">
+        <di:waypoint x="428.00" y="270.00" />
+        <di:waypoint x="478.00" y="270.00" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="ap4_di" bpmnElement="ap4">
+        <di:waypoint x="578.00" y="270.00" />
+        <di:waypoint x="628.00" y="270.00" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="ap5_di" bpmnElement="ap5">
+        <di:waypoint x="728.00" y="270.00" />
+        <di:waypoint x="778.00" y="270.00" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="ap6_di" bpmnElement="ap6">
+        <di:waypoint x="878.00" y="270.00" />
+        <di:waypoint x="928.00" y="270.00" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="ap7_di" bpmnElement="ap7">
+        <di:waypoint x="1028.00" y="270.00" />
+        <di:waypoint x="1078.00" y="270.00" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="ap8_di" bpmnElement="ap8">
+        <di:waypoint x="1178.00" y="270.00" />
+        <di:waypoint x="1228.00" y="270.00" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="ap9_di" bpmnElement="ap9">
+        <di:waypoint x="1328.00" y="270.00" />
+        <di:waypoint x="1410.00" y="270.00" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="aw1_di" bpmnElement="aw1">
+        <di:waypoint x="96.00" y="470.00" />
+        <di:waypoint x="178.00" y="470.00" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="aw2_di" bpmnElement="aw2">
+        <di:waypoint x="278.00" y="470.00" />
+        <di:waypoint x="328.00" y="470.00" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="aw3_di" bpmnElement="aw3">
+        <di:waypoint x="428.00" y="470.00" />
+        <di:waypoint x="510.00" y="470.00" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="af1_di" bpmnElement="af1">
+        <di:waypoint x="96.00" y="670.00" />
+        <di:waypoint x="178.00" y="670.00" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="af2_di" bpmnElement="af2">
+        <di:waypoint x="278.00" y="670.00" />
+        <di:waypoint x="328.00" y="670.00" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="af3_di" bpmnElement="af3">
+        <di:waypoint x="428.00" y="670.00" />
+        <di:waypoint x="478.00" y="670.00" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="af4_di" bpmnElement="af4">
+        <di:waypoint x="578.00" y="670.00" />
+        <di:waypoint x="660.00" y="670.00" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="ax1_di" bpmnElement="ax1">
+        <di:waypoint x="96.00" y="870.00" />
+        <di:waypoint x="178.00" y="870.00" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="ax2_di" bpmnElement="ax2">
+        <di:waypoint x="278.00" y="870.00" />
+        <di:waypoint x="328.00" y="870.00" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="ax3_di" bpmnElement="ax3">
+        <di:waypoint x="428.00" y="870.00" />
+        <di:waypoint x="510.00" y="870.00" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="asmf_enq_di" bpmnElement="asmf_enq">
+        <di:waypoint x="228.00" y="110.00" />
+        <di:waypoint x="228.00" y="170.00" />
+        <di:waypoint x="228.00" y="170.00" />
+        <di:waypoint x="228.00" y="230.00" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="asmf_stockcall_di" bpmnElement="asmf_stockcall">
+        <di:waypoint x="378.00" y="310.00" />
+        <di:waypoint x="378.00" y="370.00" />
+        <di:waypoint x="228.00" y="370.00" />
+        <di:waypoint x="228.00" y="430.00" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="asmf_stockback_di" bpmnElement="asmf_stockback">
+        <di:waypoint x="378.00" y="510.00" />
+        <di:waypoint x="378.00" y="370.00" />
+        <di:waypoint x="528.00" y="370.00" />
+        <di:waypoint x="528.00" y="230.00" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="asmf_quote_di" bpmnElement="asmf_quote">
+        <di:waypoint x="528.00" y="310.00" />
+        <di:waypoint x="528.00" y="170.00" />
+        <di:waypoint x="378.00" y="170.00" />
+        <di:waypoint x="378.00" y="30.00" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="asmf_fax_di" bpmnElement="asmf_fax">
+        <di:waypoint x="678.00" y="310.00" />
+        <di:waypoint x="678.00" y="470.00" />
+        <di:waypoint x="228.00" y="470.00" />
+        <di:waypoint x="228.00" y="630.00" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="asmf_faxback_di" bpmnElement="asmf_faxback">
+        <di:waypoint x="528.00" y="710.00" />
+        <di:waypoint x="528.00" y="470.00" />
+        <di:waypoint x="828.00" y="470.00" />
+        <di:waypoint x="828.00" y="230.00" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="asmf_goods_di" bpmnElement="asmf_goods">
+        <di:waypoint x="1128.00" y="310.00" />
+        <di:waypoint x="1128.00" y="170.00" />
+        <di:waypoint x="678.00" y="170.00" />
+        <di:waypoint x="678.00" y="30.00" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="asmf_book_di" bpmnElement="asmf_book">
+        <di:waypoint x="1278.00" y="310.00" />
+        <di:waypoint x="1278.00" y="570.00" />
+        <di:waypoint x="228.00" y="570.00" />
+        <di:waypoint x="228.00" y="830.00" />
+      </bpmndi:BPMNEdge>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+</bpmn:definitions>

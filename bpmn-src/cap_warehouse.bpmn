@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL"
+                  xmlns:zeebe="http://camunda.org/schema/zeebe/1.0"
+                  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                  id="defs_cap_warehouse" targetNamespace="http://probuild/platform">
+  <bpmn:process id="Cap_Warehouse" name="Warehouse Capability" isExecutable="true">
+
+    <bpmn:startEvent id="Wh_Start" name="Warehouse invoked">
+      <bpmn:outgoing>w_f0</bpmn:outgoing>
+    </bpmn:startEvent>
+    <bpmn:exclusiveGateway id="Wh_Mode" name="Fulfil or return?" default="w_fulfil">
+      <bpmn:incoming>w_f0</bpmn:incoming>
+      <bpmn:outgoing>w_return</bpmn:outgoing>
+      <bpmn:outgoing>w_fulfil</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+
+    <!-- FULFIL path (buy) -->
+    <bpmn:serviceTask id="Wh_CreateOrder" name="Create order">
+      <bpmn:extensionElements><zeebe:taskDefinition type="warehouse-create-order" /></bpmn:extensionElements>
+      <bpmn:incoming>w_fulfil</bpmn:incoming><bpmn:outgoing>w_f2</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:userTask id="Wh_Pick" name="Pick items">
+      <bpmn:extensionElements><zeebe:userTask /><zeebe:formDefinition formId="form_pick_items" /></bpmn:extensionElements>
+      <bpmn:incoming>w_f2</bpmn:incoming><bpmn:incoming>w_repick</bpmn:incoming><bpmn:outgoing>w_f3</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:userTask id="Wh_QC" name="Quality check">
+      <bpmn:extensionElements><zeebe:userTask /><zeebe:formDefinition formId="form_qc_check" /></bpmn:extensionElements>
+      <bpmn:incoming>w_f3</bpmn:incoming><bpmn:outgoing>w_f4</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:exclusiveGateway id="Wh_QcPass" name="QC passed?" default="w_repick">
+      <bpmn:incoming>w_f4</bpmn:incoming>
+      <bpmn:outgoing>w_pass</bpmn:outgoing>
+      <bpmn:outgoing>w_repick</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:serviceTask id="Wh_Dispatch" name="Dispatch goods">
+      <bpmn:extensionElements><zeebe:taskDefinition type="warehouse-dispatch" /></bpmn:extensionElements>
+      <bpmn:incoming>w_pass</bpmn:incoming><bpmn:outgoing>w_f5</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:endEvent id="Wh_EndFulfil" name="Order fulfilled">
+      <bpmn:incoming>w_f5</bpmn:incoming>
+    </bpmn:endEvent>
+
+    <!-- RETURN path (hire) -->
+    <bpmn:userTask id="Wh_Inspect" name="Inspect returned tool">
+      <bpmn:extensionElements><zeebe:userTask /><zeebe:formDefinition formId="form_inspect_tool" /></bpmn:extensionElements>
+      <bpmn:incoming>w_return</bpmn:incoming><bpmn:outgoing>w_f6</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:serviceTask id="Wh_Restock" name="Assess return">
+      <bpmn:extensionElements><zeebe:taskDefinition type="warehouse-assess-return" /></bpmn:extensionElements>
+      <bpmn:incoming>w_f6</bpmn:incoming><bpmn:outgoing>w_f7</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:endEvent id="Wh_EndReturn" name="Return processed">
+      <bpmn:incoming>w_f7</bpmn:incoming>
+    </bpmn:endEvent>
+
+    <bpmn:sequenceFlow id="w_f0" sourceRef="Wh_Start" targetRef="Wh_Mode" />
+    <bpmn:sequenceFlow id="w_return" name="return" sourceRef="Wh_Mode" targetRef="Wh_Inspect">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">=fulfilMode = "RETURN"</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="w_fulfil" name="fulfil" sourceRef="Wh_Mode" targetRef="Wh_CreateOrder" />
+    <bpmn:sequenceFlow id="w_f2" sourceRef="Wh_CreateOrder" targetRef="Wh_Pick" />
+    <bpmn:sequenceFlow id="w_f3" sourceRef="Wh_Pick" targetRef="Wh_QC" />
+    <bpmn:sequenceFlow id="w_f4" sourceRef="Wh_QC" targetRef="Wh_QcPass" />
+    <bpmn:sequenceFlow id="w_pass" name="pass" sourceRef="Wh_QcPass" targetRef="Wh_Dispatch">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">=qcPassed = true</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="w_repick" name="re-pick" sourceRef="Wh_QcPass" targetRef="Wh_Pick" />
+    <bpmn:sequenceFlow id="w_f5" sourceRef="Wh_Dispatch" targetRef="Wh_EndFulfil" />
+    <bpmn:sequenceFlow id="w_f6" sourceRef="Wh_Inspect" targetRef="Wh_Restock" />
+    <bpmn:sequenceFlow id="w_f7" sourceRef="Wh_Restock" targetRef="Wh_EndReturn" />
+  </bpmn:process>
+</bpmn:definitions>

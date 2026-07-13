@@ -1,0 +1,871 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<bpmn:definitions xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL"
+                  xmlns:zeebe="http://camunda.org/schema/zeebe/1.0"
+                  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                  id="defs_journey" targetNamespace="http://probuild/platform">
+
+  <bpmn:collaboration id="Collab_ProBuild">
+    <bpmn:participant id="Pool_Customer" name="Customer" processRef="Journey_Customer" />
+    <bpmn:participant id="Pool_FinTrust" name="FinTrust UK (Finance Partner)" processRef="Partner_FinTrust" />
+    <bpmn:participant id="Pool_FixPro" name="FixPro Ltd (Maintenance Partner)" processRef="Partner_FixPro" />
+    <bpmn:messageFlow id="mf_fin_req" sourceRef="J_SendFinance" targetRef="FT_Start" />
+    <bpmn:messageFlow id="mf_fin_settle_a" sourceRef="FT_SettleApproved" targetRef="J_CatchFinance" />
+    <bpmn:messageFlow id="mf_fin_settle_r" sourceRef="FT_SettleRejected" targetRef="J_CatchFinance" />
+    <bpmn:messageFlow id="mf_svc_req" sourceRef="J_SendService" targetRef="FX_Start" />
+    <bpmn:messageFlow id="mf_svc_done" sourceRef="FX_Settle" targetRef="J_CatchService" />
+  </bpmn:collaboration>
+
+  <!-- ============ CUSTOMER ORCHESTRATOR ============ -->
+  <bpmn:process id="Journey_Customer" name="Customer Journey (Orchestrator)" isExecutable="true">
+
+    <bpmn:startEvent id="J_Start" name="Customer arrives">
+      <bpmn:extensionElements><zeebe:formDefinition formId="form_choose_service" /></bpmn:extensionElements>
+      <bpmn:outgoing>j_f1</bpmn:outgoing>
+    </bpmn:startEvent>
+    <bpmn:serviceTask id="J_Init" name="Open journey">
+      <bpmn:extensionElements><zeebe:taskDefinition type="journey-init" /></bpmn:extensionElements>
+      <bpmn:incoming>j_f1</bpmn:incoming><bpmn:outgoing>j_f2</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:exclusiveGateway id="J_Route" name="Which service?" default="j_buy">
+      <bpmn:incoming>j_f2</bpmn:incoming>
+      <bpmn:outgoing>j_card</bpmn:outgoing>
+      <bpmn:outgoing>j_hire</bpmn:outgoing>
+      <bpmn:outgoing>j_buy</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+
+    <!-- Trade Card branch -->
+    <bpmn:userTask id="J_ApplyCard" name="Apply for Trade Card">
+      <bpmn:extensionElements><zeebe:userTask /><zeebe:formDefinition formId="form_apply_card" /></bpmn:extensionElements>
+      <bpmn:incoming>j_card</bpmn:incoming><bpmn:outgoing>j_f3</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:callActivity id="J_CallLoyalty" name="Loyalty: enrol">
+      <bpmn:extensionElements>
+        <zeebe:calledElement processId="Cap_Loyalty" propagateAllChildVariables="true" />
+        <zeebe:ioMapping><zeebe:input source="=&quot;ENROL&quot;" target="loyaltyMode" /></zeebe:ioMapping>
+      </bpmn:extensionElements>
+      <bpmn:incoming>j_f3</bpmn:incoming><bpmn:outgoing>j_f4</bpmn:outgoing>
+    </bpmn:callActivity>
+    <bpmn:userTask id="J_ConfirmCard" name="Trade Card confirmation">
+      <bpmn:extensionElements><zeebe:userTask /><zeebe:formDefinition formId="form_confirm_card" /></bpmn:extensionElements>
+      <bpmn:incoming>j_f4</bpmn:incoming><bpmn:outgoing>j_f5</bpmn:outgoing>
+    </bpmn:userTask>
+
+    <!-- Buy branch -->
+    <bpmn:userTask id="J_Browse" name="Browse products">
+      <bpmn:extensionElements><zeebe:userTask /><zeebe:formDefinition formId="form_browse_products" /></bpmn:extensionElements>
+      <bpmn:incoming>j_buy</bpmn:incoming><bpmn:outgoing>j_f6</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:callActivity id="J_CallSales" name="Sales: quote">
+      <bpmn:extensionElements><zeebe:calledElement processId="Cap_Sales" propagateAllChildVariables="true" /></bpmn:extensionElements>
+      <bpmn:incoming>j_f6</bpmn:incoming><bpmn:outgoing>j_f7</bpmn:outgoing>
+    </bpmn:callActivity>
+    <bpmn:exclusiveGateway id="J_QuoteGate" name="In stock?" default="j_backorder">
+      <bpmn:incoming>j_f7</bpmn:incoming>
+      <bpmn:outgoing>j_quoted</bpmn:outgoing>
+      <bpmn:outgoing>j_backorder</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:userTask id="J_Backorder" name="Backorder notice">
+      <bpmn:extensionElements><zeebe:userTask /><zeebe:formDefinition formId="form_backorder_ack" /></bpmn:extensionElements>
+      <bpmn:incoming>j_backorder</bpmn:incoming><bpmn:outgoing>j_f8</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:userTask id="J_ReviewQuote" name="Review quote">
+      <bpmn:extensionElements><zeebe:userTask /><zeebe:formDefinition formId="form_review_quote" /></bpmn:extensionElements>
+      <bpmn:incoming>j_quoted</bpmn:incoming><bpmn:outgoing>j_f9</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:exclusiveGateway id="J_AcceptGate" name="Quote accepted?" default="j_reject">
+      <bpmn:incoming>j_f9</bpmn:incoming>
+      <bpmn:outgoing>j_accept</bpmn:outgoing>
+      <bpmn:outgoing>j_reject</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:userTask id="J_Payment" name="Choose payment method">
+      <bpmn:extensionElements><zeebe:userTask /><zeebe:formDefinition formId="form_make_payment" /></bpmn:extensionElements>
+      <bpmn:incoming>j_accept</bpmn:incoming><bpmn:outgoing>j_f10</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:exclusiveGateway id="J_PayGate" name="Finance?" default="j_direct">
+      <bpmn:incoming>j_f10</bpmn:incoming>
+      <bpmn:outgoing>j_finance</bpmn:outgoing>
+      <bpmn:outgoing>j_direct</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:sendTask id="J_SendFinance" name="Request finance">
+      <bpmn:extensionElements><zeebe:taskDefinition type="publish-finance-request" /></bpmn:extensionElements>
+      <bpmn:incoming>j_finance</bpmn:incoming><bpmn:outgoing>j_f11</bpmn:outgoing>
+    </bpmn:sendTask>
+    <bpmn:intermediateCatchEvent id="J_CatchFinance" name="Finance settled">
+      <bpmn:incoming>j_f11</bpmn:incoming><bpmn:outgoing>j_f12</bpmn:outgoing>
+      <bpmn:messageEventDefinition messageRef="Msg_FinanceSettled" />
+    </bpmn:intermediateCatchEvent>
+    <bpmn:exclusiveGateway id="J_FinGate" name="Finance approved?" default="j_findecline">
+      <bpmn:incoming>j_f12</bpmn:incoming>
+      <bpmn:outgoing>j_finapprove</bpmn:outgoing>
+      <bpmn:outgoing>j_findecline</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:exclusiveGateway id="J_PayMerge">
+      <bpmn:incoming>j_direct</bpmn:incoming>
+      <bpmn:incoming>j_finapprove</bpmn:incoming>
+      <bpmn:outgoing>j_f13</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:callActivity id="J_CallWarehouse" name="Warehouse: fulfil">
+      <bpmn:extensionElements>
+        <zeebe:calledElement processId="Cap_Warehouse" propagateAllChildVariables="true" />
+        <zeebe:ioMapping><zeebe:input source="=&quot;FULFIL&quot;" target="fulfilMode" /></zeebe:ioMapping>
+      </bpmn:extensionElements>
+      <bpmn:incoming>j_f13</bpmn:incoming><bpmn:outgoing>j_f14</bpmn:outgoing>
+    </bpmn:callActivity>
+    <bpmn:callActivity id="J_CallAccrue" name="Loyalty: accrue">
+      <bpmn:extensionElements>
+        <zeebe:calledElement processId="Cap_Loyalty" propagateAllChildVariables="true" />
+        <zeebe:ioMapping><zeebe:input source="=&quot;ACCRUE&quot;" target="loyaltyMode" /></zeebe:ioMapping>
+      </bpmn:extensionElements>
+      <bpmn:incoming>j_f14</bpmn:incoming><bpmn:outgoing>j_f15</bpmn:outgoing>
+    </bpmn:callActivity>
+    <bpmn:userTask id="J_ConfirmPurchase" name="Purchase confirmation">
+      <bpmn:extensionElements><zeebe:userTask /><zeebe:formDefinition formId="form_confirm_purchase" /></bpmn:extensionElements>
+      <bpmn:incoming>j_f15</bpmn:incoming><bpmn:outgoing>j_f16</bpmn:outgoing>
+    </bpmn:userTask>
+
+    <!-- Hire branch -->
+    <bpmn:userTask id="J_CheckAvail" name="Check tool availability">
+      <bpmn:extensionElements><zeebe:userTask /><zeebe:formDefinition formId="form_check_avail" /></bpmn:extensionElements>
+      <bpmn:incoming>j_hire</bpmn:incoming><bpmn:outgoing>j_h1</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:callActivity id="J_CallHire" name="Hire: book">
+      <bpmn:extensionElements><zeebe:calledElement processId="Cap_Hire" propagateAllChildVariables="true" /></bpmn:extensionElements>
+      <bpmn:incoming>j_h1</bpmn:incoming><bpmn:outgoing>j_h2</bpmn:outgoing>
+    </bpmn:callActivity>
+    <bpmn:exclusiveGateway id="J_HireGate" name="Booked?" default="j_unavail">
+      <bpmn:incoming>j_h2</bpmn:incoming>
+      <bpmn:outgoing>j_booked</bpmn:outgoing>
+      <bpmn:outgoing>j_unavail</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:userTask id="J_HireUnavail" name="Tool unavailable">
+      <bpmn:extensionElements><zeebe:userTask /><zeebe:formDefinition formId="form_hire_unavail" /></bpmn:extensionElements>
+      <bpmn:incoming>j_unavail</bpmn:incoming><bpmn:outgoing>j_h3</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:userTask id="J_PayDeposit" name="Pay deposit">
+      <bpmn:extensionElements><zeebe:userTask /><zeebe:formDefinition formId="form_pay_deposit" /></bpmn:extensionElements>
+      <bpmn:incoming>j_booked</bpmn:incoming><bpmn:outgoing>j_h4</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:userTask id="J_UseTool" name="Use tool">
+      <bpmn:extensionElements><zeebe:userTask /><zeebe:formDefinition formId="form_use_tool" /></bpmn:extensionElements>
+      <bpmn:incoming>j_h4</bpmn:incoming><bpmn:outgoing>j_h5</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:userTask id="J_ReturnTool" name="Return tool">
+      <bpmn:extensionElements><zeebe:userTask /><zeebe:formDefinition formId="form_return_tool" /></bpmn:extensionElements>
+      <bpmn:incoming>j_h5</bpmn:incoming><bpmn:outgoing>j_h6</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:callActivity id="J_CallWhReturn" name="Warehouse: inspect return">
+      <bpmn:extensionElements>
+        <zeebe:calledElement processId="Cap_Warehouse" propagateAllChildVariables="true" />
+        <zeebe:ioMapping><zeebe:input source="=&quot;RETURN&quot;" target="fulfilMode" /></zeebe:ioMapping>
+      </bpmn:extensionElements>
+      <bpmn:incoming>j_h6</bpmn:incoming><bpmn:outgoing>j_h7</bpmn:outgoing>
+    </bpmn:callActivity>
+    <bpmn:exclusiveGateway id="J_ServiceGate" name="Needs maintenance?" default="j_noservice">
+      <bpmn:incoming>j_h7</bpmn:incoming>
+      <bpmn:outgoing>j_service</bpmn:outgoing>
+      <bpmn:outgoing>j_noservice</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:sendTask id="J_SendService" name="Request FixPro service">
+      <bpmn:extensionElements><zeebe:taskDefinition type="publish-service-request" /></bpmn:extensionElements>
+      <bpmn:incoming>j_service</bpmn:incoming><bpmn:outgoing>j_h8</bpmn:outgoing>
+    </bpmn:sendTask>
+    <bpmn:intermediateCatchEvent id="J_CatchService" name="Tool serviced">
+      <bpmn:incoming>j_h8</bpmn:incoming><bpmn:outgoing>j_h9</bpmn:outgoing>
+      <bpmn:messageEventDefinition messageRef="Msg_ServiceCompleted" />
+    </bpmn:intermediateCatchEvent>
+    <bpmn:exclusiveGateway id="J_HireMerge">
+      <bpmn:incoming>j_noservice</bpmn:incoming>
+      <bpmn:incoming>j_h9</bpmn:incoming>
+      <bpmn:outgoing>j_h10</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+
+    <!-- Terminal merges -->
+    <bpmn:exclusiveGateway id="J_ServedMerge">
+      <bpmn:incoming>j_f5</bpmn:incoming>
+      <bpmn:incoming>j_f16</bpmn:incoming>
+      <bpmn:incoming>j_h10</bpmn:incoming>
+      <bpmn:outgoing>j_served</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:endEvent id="J_End" name="Customer served">
+      <bpmn:incoming>j_served</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:exclusiveGateway id="J_CancelMerge">
+      <bpmn:incoming>j_f8</bpmn:incoming>
+      <bpmn:incoming>j_reject</bpmn:incoming>
+      <bpmn:incoming>j_findecline</bpmn:incoming>
+      <bpmn:incoming>j_h3</bpmn:incoming>
+      <bpmn:outgoing>j_cancelled</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:endEvent id="J_EndCancel" name="Customer cancelled">
+      <bpmn:incoming>j_cancelled</bpmn:incoming>
+    </bpmn:endEvent>
+
+    <bpmn:sequenceFlow id="j_f1" sourceRef="J_Start" targetRef="J_Init" />
+    <bpmn:sequenceFlow id="j_f2" sourceRef="J_Init" targetRef="J_Route" />
+    <bpmn:sequenceFlow id="j_card" name="apply card" sourceRef="J_Route" targetRef="J_ApplyCard">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">=serviceType = "apply_card"</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="j_hire" name="hire" sourceRef="J_Route" targetRef="J_CheckAvail">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">=serviceType = "hire"</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="j_buy" name="buy" sourceRef="J_Route" targetRef="J_Browse" />
+    <bpmn:sequenceFlow id="j_f3" sourceRef="J_ApplyCard" targetRef="J_CallLoyalty" />
+    <bpmn:sequenceFlow id="j_f4" sourceRef="J_CallLoyalty" targetRef="J_ConfirmCard" />
+    <bpmn:sequenceFlow id="j_f5" sourceRef="J_ConfirmCard" targetRef="J_ServedMerge" />
+    <bpmn:sequenceFlow id="j_f6" sourceRef="J_Browse" targetRef="J_CallSales" />
+    <bpmn:sequenceFlow id="j_f7" sourceRef="J_CallSales" targetRef="J_QuoteGate" />
+    <bpmn:sequenceFlow id="j_quoted" name="quoted" sourceRef="J_QuoteGate" targetRef="J_ReviewQuote">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">=salesOutcome = "QUOTED"</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="j_backorder" name="backorder" sourceRef="J_QuoteGate" targetRef="J_Backorder" />
+    <bpmn:sequenceFlow id="j_f8" sourceRef="J_Backorder" targetRef="J_CancelMerge" />
+    <bpmn:sequenceFlow id="j_f9" sourceRef="J_ReviewQuote" targetRef="J_AcceptGate" />
+    <bpmn:sequenceFlow id="j_accept" name="accept" sourceRef="J_AcceptGate" targetRef="J_Payment">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">=quoteAccepted = true</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="j_reject" name="reject" sourceRef="J_AcceptGate" targetRef="J_CancelMerge" />
+    <bpmn:sequenceFlow id="j_f10" sourceRef="J_Payment" targetRef="J_PayGate" />
+    <bpmn:sequenceFlow id="j_finance" name="finance" sourceRef="J_PayGate" targetRef="J_SendFinance">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">=paymentMethod = "finance"</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="j_direct" name="card / cash" sourceRef="J_PayGate" targetRef="J_PayMerge" />
+    <bpmn:sequenceFlow id="j_f11" sourceRef="J_SendFinance" targetRef="J_CatchFinance" />
+    <bpmn:sequenceFlow id="j_f12" sourceRef="J_CatchFinance" targetRef="J_FinGate" />
+    <bpmn:sequenceFlow id="j_finapprove" name="approved" sourceRef="J_FinGate" targetRef="J_PayMerge">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">=financeApproved = true</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="j_findecline" name="declined" sourceRef="J_FinGate" targetRef="J_CancelMerge" />
+    <bpmn:sequenceFlow id="j_f13" sourceRef="J_PayMerge" targetRef="J_CallWarehouse" />
+    <bpmn:sequenceFlow id="j_f14" sourceRef="J_CallWarehouse" targetRef="J_CallAccrue" />
+    <bpmn:sequenceFlow id="j_f15" sourceRef="J_CallAccrue" targetRef="J_ConfirmPurchase" />
+    <bpmn:sequenceFlow id="j_f16" sourceRef="J_ConfirmPurchase" targetRef="J_ServedMerge" />
+    <bpmn:sequenceFlow id="j_h1" sourceRef="J_CheckAvail" targetRef="J_CallHire" />
+    <bpmn:sequenceFlow id="j_h2" sourceRef="J_CallHire" targetRef="J_HireGate" />
+    <bpmn:sequenceFlow id="j_booked" name="booked" sourceRef="J_HireGate" targetRef="J_PayDeposit">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">=hireOutcome = "BOOKED"</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="j_unavail" name="unavailable" sourceRef="J_HireGate" targetRef="J_HireUnavail" />
+    <bpmn:sequenceFlow id="j_h3" sourceRef="J_HireUnavail" targetRef="J_CancelMerge" />
+    <bpmn:sequenceFlow id="j_h4" sourceRef="J_PayDeposit" targetRef="J_UseTool" />
+    <bpmn:sequenceFlow id="j_h5" sourceRef="J_UseTool" targetRef="J_ReturnTool" />
+    <bpmn:sequenceFlow id="j_h6" sourceRef="J_ReturnTool" targetRef="J_CallWhReturn" />
+    <bpmn:sequenceFlow id="j_h7" sourceRef="J_CallWhReturn" targetRef="J_ServiceGate" />
+    <bpmn:sequenceFlow id="j_service" name="needs service" sourceRef="J_ServiceGate" targetRef="J_SendService">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">=needsMaintenance = true</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="j_noservice" name="ready to hire" sourceRef="J_ServiceGate" targetRef="J_HireMerge" />
+    <bpmn:sequenceFlow id="j_h8" sourceRef="J_SendService" targetRef="J_CatchService" />
+    <bpmn:sequenceFlow id="j_h9" sourceRef="J_CatchService" targetRef="J_HireMerge" />
+    <bpmn:sequenceFlow id="j_h10" sourceRef="J_HireMerge" targetRef="J_ServedMerge" />
+    <bpmn:sequenceFlow id="j_served" sourceRef="J_ServedMerge" targetRef="J_End" />
+    <bpmn:sequenceFlow id="j_cancelled" sourceRef="J_CancelMerge" targetRef="J_EndCancel" />
+  </bpmn:process>
+
+  <!-- ============ FINTRUST PARTNER ============ -->
+  <bpmn:process id="Partner_FinTrust" name="FinTrust UK" isExecutable="true">
+    <bpmn:startEvent id="FT_Start" name="Finance request received">
+      <bpmn:outgoing>ft_f1</bpmn:outgoing>
+      <bpmn:messageEventDefinition messageRef="Msg_FinanceRequested" />
+    </bpmn:startEvent>
+    <bpmn:businessRuleTask id="FT_Assess" name="Assess creditworthiness">
+      <bpmn:extensionElements><zeebe:calledDecision decisionId="finance_assessment" resultVariable="financeResult" /></bpmn:extensionElements>
+      <bpmn:incoming>ft_f1</bpmn:incoming><bpmn:outgoing>ft_f2</bpmn:outgoing>
+    </bpmn:businessRuleTask>
+    <bpmn:userTask id="FT_Review" name="Review &amp; confirm decision">
+      <bpmn:extensionElements><zeebe:userTask /><zeebe:formDefinition formId="form_finance_review" /></bpmn:extensionElements>
+      <bpmn:incoming>ft_f2</bpmn:incoming><bpmn:outgoing>ft_f3</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:exclusiveGateway id="FT_Decision" name="Approved?" default="ft_reject">
+      <bpmn:incoming>ft_f3</bpmn:incoming>
+      <bpmn:outgoing>ft_approve</bpmn:outgoing>
+      <bpmn:outgoing>ft_reject</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:serviceTask id="FT_Transfer" name="Transfer funds">
+      <bpmn:extensionElements><zeebe:taskDefinition type="finance-transfer" /></bpmn:extensionElements>
+      <bpmn:incoming>ft_approve</bpmn:incoming><bpmn:outgoing>ft_f4</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:sendTask id="FT_SettleApproved" name="Notify approval">
+      <bpmn:extensionElements><zeebe:taskDefinition type="publish-finance-settled" /></bpmn:extensionElements>
+      <bpmn:incoming>ft_f4</bpmn:incoming><bpmn:outgoing>ft_f5</bpmn:outgoing>
+    </bpmn:sendTask>
+    <bpmn:endEvent id="FT_EndApproved" name="Funds transferred">
+      <bpmn:incoming>ft_f5</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:serviceTask id="FT_Reject" name="Record rejection">
+      <bpmn:extensionElements><zeebe:taskDefinition type="finance-reject" /></bpmn:extensionElements>
+      <bpmn:incoming>ft_reject</bpmn:incoming><bpmn:outgoing>ft_f6</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:sendTask id="FT_SettleRejected" name="Notify rejection">
+      <bpmn:extensionElements><zeebe:taskDefinition type="publish-finance-settled" /></bpmn:extensionElements>
+      <bpmn:incoming>ft_f6</bpmn:incoming><bpmn:outgoing>ft_f7</bpmn:outgoing>
+    </bpmn:sendTask>
+    <bpmn:endEvent id="FT_EndRejected" name="Application rejected">
+      <bpmn:incoming>ft_f7</bpmn:incoming>
+    </bpmn:endEvent>
+
+    <bpmn:sequenceFlow id="ft_f1" sourceRef="FT_Start" targetRef="FT_Assess" />
+    <bpmn:sequenceFlow id="ft_f2" sourceRef="FT_Assess" targetRef="FT_Review" />
+    <bpmn:sequenceFlow id="ft_f3" sourceRef="FT_Review" targetRef="FT_Decision" />
+    <bpmn:sequenceFlow id="ft_approve" name="approve" sourceRef="FT_Decision" targetRef="FT_Transfer">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">=financeApproved = true</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="ft_reject" name="reject" sourceRef="FT_Decision" targetRef="FT_Reject" />
+    <bpmn:sequenceFlow id="ft_f4" sourceRef="FT_Transfer" targetRef="FT_SettleApproved" />
+    <bpmn:sequenceFlow id="ft_f5" sourceRef="FT_SettleApproved" targetRef="FT_EndApproved" />
+    <bpmn:sequenceFlow id="ft_f6" sourceRef="FT_Reject" targetRef="FT_SettleRejected" />
+    <bpmn:sequenceFlow id="ft_f7" sourceRef="FT_SettleRejected" targetRef="FT_EndRejected" />
+  </bpmn:process>
+
+  <!-- ============ FIXPRO PARTNER ============ -->
+  <bpmn:process id="Partner_FixPro" name="FixPro Ltd" isExecutable="true">
+    <bpmn:startEvent id="FX_Start" name="Service request received">
+      <bpmn:outgoing>fx_f1</bpmn:outgoing>
+      <bpmn:messageEventDefinition messageRef="Msg_ServiceRequested" />
+    </bpmn:startEvent>
+    <bpmn:serviceTask id="FX_Collect" name="Collect tools">
+      <bpmn:extensionElements><zeebe:taskDefinition type="fixpro-collect" /></bpmn:extensionElements>
+      <bpmn:incoming>fx_f1</bpmn:incoming><bpmn:outgoing>fx_f2</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:businessRuleTask id="FX_Triage" name="Triage batch">
+      <bpmn:extensionElements><zeebe:calledDecision decisionId="maintenance_triage" resultVariable="triageResult" /></bpmn:extensionElements>
+      <bpmn:incoming>fx_f2</bpmn:incoming><bpmn:outgoing>fx_f3</bpmn:outgoing>
+    </bpmn:businessRuleTask>
+    <bpmn:serviceTask id="FX_Service" name="Service &amp; PAT test">
+      <bpmn:extensionElements><zeebe:taskDefinition type="fixpro-service" /></bpmn:extensionElements>
+      <bpmn:incoming>fx_f3</bpmn:incoming><bpmn:outgoing>fx_f4</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:serviceTask id="FX_Report" name="Generate report &amp; invoice">
+      <bpmn:extensionElements><zeebe:taskDefinition type="fixpro-report" /></bpmn:extensionElements>
+      <bpmn:incoming>fx_f4</bpmn:incoming><bpmn:outgoing>fx_f5</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:sendTask id="FX_Settle" name="Return serviced tools">
+      <bpmn:extensionElements><zeebe:taskDefinition type="publish-service-completed" /></bpmn:extensionElements>
+      <bpmn:incoming>fx_f5</bpmn:incoming><bpmn:outgoing>fx_f6</bpmn:outgoing>
+    </bpmn:sendTask>
+    <bpmn:endEvent id="FX_EndServiced" name="Batch complete">
+      <bpmn:incoming>fx_f6</bpmn:incoming>
+    </bpmn:endEvent>
+
+    <!-- Weekly scheduled batch (timer-triggered) -->
+    <bpmn:startEvent id="FX_TimerStart" name="Weekly maintenance sweep">
+      <bpmn:outgoing>fx_t1</bpmn:outgoing>
+      <bpmn:timerEventDefinition><bpmn:timeCycle>R/P7D</bpmn:timeCycle></bpmn:timerEventDefinition>
+    </bpmn:startEvent>
+    <bpmn:serviceTask id="FX_Weekly" name="Sweep service bay">
+      <bpmn:extensionElements><zeebe:taskDefinition type="fixpro-weekly-batch" /></bpmn:extensionElements>
+      <bpmn:incoming>fx_t1</bpmn:incoming><bpmn:outgoing>fx_t2</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:endEvent id="FX_EndWeekly" name="Sweep done">
+      <bpmn:incoming>fx_t2</bpmn:incoming>
+    </bpmn:endEvent>
+
+    <bpmn:sequenceFlow id="fx_f1" sourceRef="FX_Start" targetRef="FX_Collect" />
+    <bpmn:sequenceFlow id="fx_f2" sourceRef="FX_Collect" targetRef="FX_Triage" />
+    <bpmn:sequenceFlow id="fx_f3" sourceRef="FX_Triage" targetRef="FX_Service" />
+    <bpmn:sequenceFlow id="fx_f4" sourceRef="FX_Service" targetRef="FX_Report" />
+    <bpmn:sequenceFlow id="fx_f5" sourceRef="FX_Report" targetRef="FX_Settle" />
+    <bpmn:sequenceFlow id="fx_f6" sourceRef="FX_Settle" targetRef="FX_EndServiced" />
+    <bpmn:sequenceFlow id="fx_t1" sourceRef="FX_TimerStart" targetRef="FX_Weekly" />
+    <bpmn:sequenceFlow id="fx_t2" sourceRef="FX_Weekly" targetRef="FX_EndWeekly" />
+  </bpmn:process>
+
+  <bpmn:message id="Msg_FinanceRequested" name="finance.requested" />
+  <bpmn:message id="Msg_FinanceSettled" name="finance.settled">
+    <bpmn:extensionElements><zeebe:subscription correlationKey="=journeyId" /></bpmn:extensionElements>
+  </bpmn:message>
+  <bpmn:message id="Msg_ServiceRequested" name="service.requested" />
+  <bpmn:message id="Msg_ServiceCompleted" name="service.completed">
+    <bpmn:extensionElements><zeebe:subscription correlationKey="=journeyId" /></bpmn:extensionElements>
+  </bpmn:message>
+  <bpmndi:BPMNDiagram id="BPMNDiagram_Collab_ProBuild">
+    <bpmndi:BPMNPlane id="BPMNPlane_Collab_ProBuild" bpmnElement="Collab_ProBuild">
+      <bpmndi:BPMNShape id="Pool_Customer_di" bpmnElement="Pool_Customer" isHorizontal="true">
+        <dc:Bounds x="0" y="0.00" width="3433.00" height="560.00" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Pool_FinTrust_di" bpmnElement="Pool_FinTrust" isHorizontal="true">
+        <dc:Bounds x="0" y="620.00" width="1026.00" height="280.00" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Pool_FixPro_di" bpmnElement="Pool_FixPro" isHorizontal="true">
+        <dc:Bounds x="0" y="960.00" width="1026.00" height="280.00" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="J_Start_di" bpmnElement="J_Start">
+        <dc:Bounds x="60.00" y="52.00" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="J_Init_di" bpmnElement="J_Init">
+        <dc:Bounds x="178.00" y="30.00" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="J_Route_di" bpmnElement="J_Route" isMarkerVisible="true">
+        <dc:Bounds x="353.00" y="45.00" width="50" height="50" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="J_ApplyCard_di" bpmnElement="J_ApplyCard">
+        <dc:Bounds x="478.00" y="30.00" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="J_CallLoyalty_di" bpmnElement="J_CallLoyalty">
+        <dc:Bounds x="628.00" y="30.00" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="J_ConfirmCard_di" bpmnElement="J_ConfirmCard">
+        <dc:Bounds x="778.00" y="30.00" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="J_ServedMerge_di" bpmnElement="J_ServedMerge" isMarkerVisible="true">
+        <dc:Bounds x="953.00" y="45.00" width="50" height="50" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="J_End_di" bpmnElement="J_End">
+        <dc:Bounds x="1110.00" y="52.00" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="J_CheckAvail_di" bpmnElement="J_CheckAvail">
+        <dc:Bounds x="478.00" y="170.00" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="J_CallHire_di" bpmnElement="J_CallHire">
+        <dc:Bounds x="628.00" y="170.00" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="J_HireGate_di" bpmnElement="J_HireGate" isMarkerVisible="true">
+        <dc:Bounds x="803.00" y="185.00" width="50" height="50" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="J_PayDeposit_di" bpmnElement="J_PayDeposit">
+        <dc:Bounds x="928.00" y="170.00" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="J_UseTool_di" bpmnElement="J_UseTool">
+        <dc:Bounds x="1078.00" y="170.00" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="J_ReturnTool_di" bpmnElement="J_ReturnTool">
+        <dc:Bounds x="1228.00" y="170.00" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="J_CallWhReturn_di" bpmnElement="J_CallWhReturn">
+        <dc:Bounds x="1378.00" y="170.00" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="J_ServiceGate_di" bpmnElement="J_ServiceGate" isMarkerVisible="true">
+        <dc:Bounds x="1553.00" y="185.00" width="50" height="50" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="J_SendService_di" bpmnElement="J_SendService">
+        <dc:Bounds x="1678.00" y="170.00" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="J_CatchService_di" bpmnElement="J_CatchService">
+        <dc:Bounds x="1860.00" y="192.00" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="J_Browse_di" bpmnElement="J_Browse">
+        <dc:Bounds x="478.00" y="310.00" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="J_CallSales_di" bpmnElement="J_CallSales">
+        <dc:Bounds x="628.00" y="310.00" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="J_QuoteGate_di" bpmnElement="J_QuoteGate" isMarkerVisible="true">
+        <dc:Bounds x="803.00" y="325.00" width="50" height="50" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="J_ReviewQuote_di" bpmnElement="J_ReviewQuote">
+        <dc:Bounds x="928.00" y="310.00" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="J_AcceptGate_di" bpmnElement="J_AcceptGate" isMarkerVisible="true">
+        <dc:Bounds x="1103.00" y="325.00" width="50" height="50" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="J_Payment_di" bpmnElement="J_Payment">
+        <dc:Bounds x="1228.00" y="310.00" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="J_PayGate_di" bpmnElement="J_PayGate" isMarkerVisible="true">
+        <dc:Bounds x="1403.00" y="325.00" width="50" height="50" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="J_SendFinance_di" bpmnElement="J_SendFinance">
+        <dc:Bounds x="1528.00" y="310.00" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="J_CatchFinance_di" bpmnElement="J_CatchFinance">
+        <dc:Bounds x="1710.00" y="332.00" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="J_FinGate_di" bpmnElement="J_FinGate" isMarkerVisible="true">
+        <dc:Bounds x="1853.00" y="325.00" width="50" height="50" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="J_HireUnavail_di" bpmnElement="J_HireUnavail">
+        <dc:Bounds x="2278.00" y="310.00" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="J_CancelMerge_di" bpmnElement="J_CancelMerge" isMarkerVisible="true">
+        <dc:Bounds x="2453.00" y="325.00" width="50" height="50" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="J_EndCancel_di" bpmnElement="J_EndCancel">
+        <dc:Bounds x="2610.00" y="332.00" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="J_HireMerge_di" bpmnElement="J_HireMerge" isMarkerVisible="true">
+        <dc:Bounds x="3353.00" y="325.00" width="50" height="50" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="J_Backorder_di" bpmnElement="J_Backorder">
+        <dc:Bounds x="928.00" y="450.00" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="J_PayMerge_di" bpmnElement="J_PayMerge" isMarkerVisible="true">
+        <dc:Bounds x="1553.00" y="465.00" width="50" height="50" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="J_CallWarehouse_di" bpmnElement="J_CallWarehouse">
+        <dc:Bounds x="1678.00" y="450.00" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="J_CallAccrue_di" bpmnElement="J_CallAccrue">
+        <dc:Bounds x="1828.00" y="450.00" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="J_ConfirmPurchase_di" bpmnElement="J_ConfirmPurchase">
+        <dc:Bounds x="1978.00" y="450.00" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="FT_Start_di" bpmnElement="FT_Start">
+        <dc:Bounds x="60.00" y="672.00" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="FT_Assess_di" bpmnElement="FT_Assess">
+        <dc:Bounds x="178.00" y="650.00" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="FT_Review_di" bpmnElement="FT_Review">
+        <dc:Bounds x="328.00" y="650.00" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="FT_Decision_di" bpmnElement="FT_Decision" isMarkerVisible="true">
+        <dc:Bounds x="503.00" y="665.00" width="50" height="50" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="FT_Transfer_di" bpmnElement="FT_Transfer">
+        <dc:Bounds x="628.00" y="650.00" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="FT_SettleApproved_di" bpmnElement="FT_SettleApproved">
+        <dc:Bounds x="778.00" y="650.00" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="FT_EndApproved_di" bpmnElement="FT_EndApproved">
+        <dc:Bounds x="960.00" y="672.00" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="FT_Reject_di" bpmnElement="FT_Reject">
+        <dc:Bounds x="628.00" y="790.00" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="FT_SettleRejected_di" bpmnElement="FT_SettleRejected">
+        <dc:Bounds x="778.00" y="790.00" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="FT_EndRejected_di" bpmnElement="FT_EndRejected">
+        <dc:Bounds x="960.00" y="812.00" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="FX_Start_di" bpmnElement="FX_Start">
+        <dc:Bounds x="60.00" y="1012.00" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="FX_Collect_di" bpmnElement="FX_Collect">
+        <dc:Bounds x="178.00" y="990.00" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="FX_Triage_di" bpmnElement="FX_Triage">
+        <dc:Bounds x="328.00" y="990.00" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="FX_Service_di" bpmnElement="FX_Service">
+        <dc:Bounds x="478.00" y="990.00" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="FX_Report_di" bpmnElement="FX_Report">
+        <dc:Bounds x="628.00" y="990.00" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="FX_Settle_di" bpmnElement="FX_Settle">
+        <dc:Bounds x="778.00" y="990.00" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="FX_EndServiced_di" bpmnElement="FX_EndServiced">
+        <dc:Bounds x="960.00" y="1012.00" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="FX_TimerStart_di" bpmnElement="FX_TimerStart">
+        <dc:Bounds x="60.00" y="1152.00" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="FX_Weekly_di" bpmnElement="FX_Weekly">
+        <dc:Bounds x="178.00" y="1130.00" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="FX_EndWeekly_di" bpmnElement="FX_EndWeekly">
+        <dc:Bounds x="360.00" y="1152.00" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="j_f1_di" bpmnElement="j_f1">
+        <di:waypoint x="96.00" y="70.00" />
+        <di:waypoint x="178.00" y="70.00" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="j_f2_di" bpmnElement="j_f2">
+        <di:waypoint x="278.00" y="70.00" />
+        <di:waypoint x="353.00" y="70.00" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="j_card_di" bpmnElement="j_card">
+        <di:waypoint x="403.00" y="70.00" />
+        <di:waypoint x="478.00" y="70.00" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="j_hire_di" bpmnElement="j_hire">
+        <di:waypoint x="378.00" y="95.00" />
+        <di:waypoint x="378.00" y="210.00" />
+        <di:waypoint x="478.00" y="210.00" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="j_buy_di" bpmnElement="j_buy">
+        <di:waypoint x="378.00" y="95.00" />
+        <di:waypoint x="378.00" y="350.00" />
+        <di:waypoint x="478.00" y="350.00" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="j_f3_di" bpmnElement="j_f3">
+        <di:waypoint x="578.00" y="70.00" />
+        <di:waypoint x="628.00" y="70.00" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="j_f4_di" bpmnElement="j_f4">
+        <di:waypoint x="728.00" y="70.00" />
+        <di:waypoint x="778.00" y="70.00" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="j_f5_di" bpmnElement="j_f5">
+        <di:waypoint x="878.00" y="70.00" />
+        <di:waypoint x="953.00" y="70.00" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="j_served_di" bpmnElement="j_served">
+        <di:waypoint x="1003.00" y="70.00" />
+        <di:waypoint x="1110.00" y="70.00" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="j_h1_di" bpmnElement="j_h1">
+        <di:waypoint x="578.00" y="210.00" />
+        <di:waypoint x="628.00" y="210.00" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="j_h2_di" bpmnElement="j_h2">
+        <di:waypoint x="728.00" y="210.00" />
+        <di:waypoint x="803.00" y="210.00" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="j_booked_di" bpmnElement="j_booked">
+        <di:waypoint x="853.00" y="210.00" />
+        <di:waypoint x="928.00" y="210.00" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="j_unavail_di" bpmnElement="j_unavail">
+        <di:waypoint x="853.00" y="210.00" />
+        <di:waypoint x="903.00" y="210.00" />
+        <di:waypoint x="903.00" y="280.00" />
+        <di:waypoint x="2253.00" y="280.00" />
+        <di:waypoint x="2253.00" y="350.00" />
+        <di:waypoint x="2278.00" y="350.00" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="j_h4_di" bpmnElement="j_h4">
+        <di:waypoint x="1028.00" y="210.00" />
+        <di:waypoint x="1078.00" y="210.00" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="j_h5_di" bpmnElement="j_h5">
+        <di:waypoint x="1178.00" y="210.00" />
+        <di:waypoint x="1228.00" y="210.00" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="j_h6_di" bpmnElement="j_h6">
+        <di:waypoint x="1328.00" y="210.00" />
+        <di:waypoint x="1378.00" y="210.00" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="j_h7_di" bpmnElement="j_h7">
+        <di:waypoint x="1478.00" y="210.00" />
+        <di:waypoint x="1553.00" y="210.00" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="j_service_di" bpmnElement="j_service">
+        <di:waypoint x="1603.00" y="210.00" />
+        <di:waypoint x="1678.00" y="210.00" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="j_noservice_di" bpmnElement="j_noservice">
+        <di:waypoint x="1603.00" y="210.00" />
+        <di:waypoint x="1653.00" y="210.00" />
+        <di:waypoint x="1653.00" y="280.00" />
+        <di:waypoint x="3303.00" y="280.00" />
+        <di:waypoint x="3303.00" y="350.00" />
+        <di:waypoint x="3353.00" y="350.00" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="j_h8_di" bpmnElement="j_h8">
+        <di:waypoint x="1778.00" y="210.00" />
+        <di:waypoint x="1860.00" y="210.00" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="j_h9_di" bpmnElement="j_h9">
+        <di:waypoint x="1896.00" y="210.00" />
+        <di:waypoint x="1953.00" y="210.00" />
+        <di:waypoint x="1953.00" y="280.00" />
+        <di:waypoint x="3303.00" y="280.00" />
+        <di:waypoint x="3303.00" y="350.00" />
+        <di:waypoint x="3353.00" y="350.00" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="j_f6_di" bpmnElement="j_f6">
+        <di:waypoint x="578.00" y="350.00" />
+        <di:waypoint x="628.00" y="350.00" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="j_f7_di" bpmnElement="j_f7">
+        <di:waypoint x="728.00" y="350.00" />
+        <di:waypoint x="803.00" y="350.00" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="j_quoted_di" bpmnElement="j_quoted">
+        <di:waypoint x="853.00" y="350.00" />
+        <di:waypoint x="928.00" y="350.00" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="j_backorder_di" bpmnElement="j_backorder">
+        <di:waypoint x="828.00" y="375.00" />
+        <di:waypoint x="828.00" y="490.00" />
+        <di:waypoint x="928.00" y="490.00" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="j_f9_di" bpmnElement="j_f9">
+        <di:waypoint x="1028.00" y="350.00" />
+        <di:waypoint x="1103.00" y="350.00" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="j_accept_di" bpmnElement="j_accept">
+        <di:waypoint x="1153.00" y="350.00" />
+        <di:waypoint x="1228.00" y="350.00" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="j_reject_di" bpmnElement="j_reject">
+        <di:waypoint x="1128.00" y="325.00" />
+        <di:waypoint x="1128.00" y="280.00" />
+        <di:waypoint x="2478.00" y="280.00" />
+        <di:waypoint x="2478.00" y="325.00" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="j_f10_di" bpmnElement="j_f10">
+        <di:waypoint x="1328.00" y="350.00" />
+        <di:waypoint x="1403.00" y="350.00" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="j_finance_di" bpmnElement="j_finance">
+        <di:waypoint x="1453.00" y="350.00" />
+        <di:waypoint x="1528.00" y="350.00" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="j_direct_di" bpmnElement="j_direct">
+        <di:waypoint x="1428.00" y="375.00" />
+        <di:waypoint x="1428.00" y="490.00" />
+        <di:waypoint x="1553.00" y="490.00" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="j_f11_di" bpmnElement="j_f11">
+        <di:waypoint x="1628.00" y="350.00" />
+        <di:waypoint x="1710.00" y="350.00" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="j_f12_di" bpmnElement="j_f12">
+        <di:waypoint x="1746.00" y="350.00" />
+        <di:waypoint x="1853.00" y="350.00" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="j_finapprove_di" bpmnElement="j_finapprove">
+        <di:waypoint x="1903.00" y="350.00" />
+        <di:waypoint x="1953.00" y="350.00" />
+        <di:waypoint x="1953.00" y="420.00" />
+        <di:waypoint x="1503.00" y="420.00" />
+        <di:waypoint x="1503.00" y="490.00" />
+        <di:waypoint x="1553.00" y="490.00" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="j_findecline_di" bpmnElement="j_findecline">
+        <di:waypoint x="1878.00" y="325.00" />
+        <di:waypoint x="1878.00" y="280.00" />
+        <di:waypoint x="2478.00" y="280.00" />
+        <di:waypoint x="2478.00" y="325.00" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="j_h3_di" bpmnElement="j_h3">
+        <di:waypoint x="2378.00" y="350.00" />
+        <di:waypoint x="2453.00" y="350.00" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="j_cancelled_di" bpmnElement="j_cancelled">
+        <di:waypoint x="2503.00" y="350.00" />
+        <di:waypoint x="2610.00" y="350.00" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="j_h10_di" bpmnElement="j_h10">
+        <di:waypoint x="3403.00" y="350.00" />
+        <di:waypoint x="3453.00" y="350.00" />
+        <di:waypoint x="3453.00" y="140.00" />
+        <di:waypoint x="903.00" y="140.00" />
+        <di:waypoint x="903.00" y="70.00" />
+        <di:waypoint x="953.00" y="70.00" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="j_f8_di" bpmnElement="j_f8">
+        <di:waypoint x="1028.00" y="490.00" />
+        <di:waypoint x="1053.00" y="490.00" />
+        <di:waypoint x="1053.00" y="420.00" />
+        <di:waypoint x="2403.00" y="420.00" />
+        <di:waypoint x="2403.00" y="350.00" />
+        <di:waypoint x="2453.00" y="350.00" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="j_f13_di" bpmnElement="j_f13">
+        <di:waypoint x="1603.00" y="490.00" />
+        <di:waypoint x="1678.00" y="490.00" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="j_f14_di" bpmnElement="j_f14">
+        <di:waypoint x="1778.00" y="490.00" />
+        <di:waypoint x="1828.00" y="490.00" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="j_f15_di" bpmnElement="j_f15">
+        <di:waypoint x="1928.00" y="490.00" />
+        <di:waypoint x="1978.00" y="490.00" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="j_f16_di" bpmnElement="j_f16">
+        <di:waypoint x="2078.00" y="490.00" />
+        <di:waypoint x="2103.00" y="490.00" />
+        <di:waypoint x="2103.00" y="140.00" />
+        <di:waypoint x="903.00" y="140.00" />
+        <di:waypoint x="903.00" y="70.00" />
+        <di:waypoint x="953.00" y="70.00" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="ft_f1_di" bpmnElement="ft_f1">
+        <di:waypoint x="96.00" y="690.00" />
+        <di:waypoint x="178.00" y="690.00" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="ft_f2_di" bpmnElement="ft_f2">
+        <di:waypoint x="278.00" y="690.00" />
+        <di:waypoint x="328.00" y="690.00" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="ft_f3_di" bpmnElement="ft_f3">
+        <di:waypoint x="428.00" y="690.00" />
+        <di:waypoint x="503.00" y="690.00" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="ft_approve_di" bpmnElement="ft_approve">
+        <di:waypoint x="553.00" y="690.00" />
+        <di:waypoint x="628.00" y="690.00" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="ft_reject_di" bpmnElement="ft_reject">
+        <di:waypoint x="528.00" y="715.00" />
+        <di:waypoint x="528.00" y="830.00" />
+        <di:waypoint x="628.00" y="830.00" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="ft_f4_di" bpmnElement="ft_f4">
+        <di:waypoint x="728.00" y="690.00" />
+        <di:waypoint x="778.00" y="690.00" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="ft_f5_di" bpmnElement="ft_f5">
+        <di:waypoint x="878.00" y="690.00" />
+        <di:waypoint x="960.00" y="690.00" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="ft_f6_di" bpmnElement="ft_f6">
+        <di:waypoint x="728.00" y="830.00" />
+        <di:waypoint x="778.00" y="830.00" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="ft_f7_di" bpmnElement="ft_f7">
+        <di:waypoint x="878.00" y="830.00" />
+        <di:waypoint x="960.00" y="830.00" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="fx_f1_di" bpmnElement="fx_f1">
+        <di:waypoint x="96.00" y="1030.00" />
+        <di:waypoint x="178.00" y="1030.00" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="fx_f2_di" bpmnElement="fx_f2">
+        <di:waypoint x="278.00" y="1030.00" />
+        <di:waypoint x="328.00" y="1030.00" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="fx_f3_di" bpmnElement="fx_f3">
+        <di:waypoint x="428.00" y="1030.00" />
+        <di:waypoint x="478.00" y="1030.00" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="fx_f4_di" bpmnElement="fx_f4">
+        <di:waypoint x="578.00" y="1030.00" />
+        <di:waypoint x="628.00" y="1030.00" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="fx_f5_di" bpmnElement="fx_f5">
+        <di:waypoint x="728.00" y="1030.00" />
+        <di:waypoint x="778.00" y="1030.00" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="fx_f6_di" bpmnElement="fx_f6">
+        <di:waypoint x="878.00" y="1030.00" />
+        <di:waypoint x="960.00" y="1030.00" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="fx_t1_di" bpmnElement="fx_t1">
+        <di:waypoint x="96.00" y="1170.00" />
+        <di:waypoint x="178.00" y="1170.00" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="fx_t2_di" bpmnElement="fx_t2">
+        <di:waypoint x="278.00" y="1170.00" />
+        <di:waypoint x="360.00" y="1170.00" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="mf_fin_req_di" bpmnElement="mf_fin_req">
+        <di:waypoint x="1578.00" y="390.00" />
+        <di:waypoint x="1578.00" y="531.00" />
+        <di:waypoint x="78.00" y="531.00" />
+        <di:waypoint x="78.00" y="672.00" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="mf_fin_settle_a_di" bpmnElement="mf_fin_settle_a">
+        <di:waypoint x="828.00" y="730.00" />
+        <di:waypoint x="828.00" y="531.00" />
+        <di:waypoint x="1728.00" y="531.00" />
+        <di:waypoint x="1728.00" y="332.00" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="mf_fin_settle_r_di" bpmnElement="mf_fin_settle_r">
+        <di:waypoint x="828.00" y="870.00" />
+        <di:waypoint x="828.00" y="601.00" />
+        <di:waypoint x="1728.00" y="601.00" />
+        <di:waypoint x="1728.00" y="332.00" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="mf_svc_req_di" bpmnElement="mf_svc_req">
+        <di:waypoint x="1728.00" y="250.00" />
+        <di:waypoint x="1728.00" y="631.00" />
+        <di:waypoint x="78.00" y="631.00" />
+        <di:waypoint x="78.00" y="1012.00" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="mf_svc_done_di" bpmnElement="mf_svc_done">
+        <di:waypoint x="828.00" y="1070.00" />
+        <di:waypoint x="828.00" y="631.00" />
+        <di:waypoint x="1878.00" y="631.00" />
+        <di:waypoint x="1878.00" y="192.00" />
+      </bpmndi:BPMNEdge>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+</bpmn:definitions>

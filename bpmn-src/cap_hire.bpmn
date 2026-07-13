@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL"
+                  xmlns:zeebe="http://camunda.org/schema/zeebe/1.0"
+                  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                  id="defs_cap_hire" targetNamespace="http://probuild/platform">
+  <bpmn:process id="Cap_Hire" name="Tool Hire Capability" isExecutable="true">
+
+    <bpmn:startEvent id="Hi_Start" name="Hire invoked">
+      <bpmn:outgoing>h_f1</bpmn:outgoing>
+    </bpmn:startEvent>
+
+    <bpmn:serviceTask id="Hi_Verify" name="Verify availability">
+      <bpmn:extensionElements><zeebe:taskDefinition type="hire-verify-availability" /></bpmn:extensionElements>
+      <bpmn:incoming>h_f1</bpmn:incoming><bpmn:outgoing>h_f2</bpmn:outgoing>
+    </bpmn:serviceTask>
+
+    <bpmn:exclusiveGateway id="Hi_Avail" name="Available?" default="h_unavail">
+      <bpmn:incoming>h_f2</bpmn:incoming>
+      <bpmn:outgoing>h_avail</bpmn:outgoing>
+      <bpmn:outgoing>h_unavail</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+
+    <bpmn:businessRuleTask id="Hi_Price" name="Price hire (tiered)">
+      <bpmn:extensionElements>
+        <zeebe:calledDecision decisionId="hire_pricing" resultVariable="hireTier" />
+      </bpmn:extensionElements>
+      <bpmn:incoming>h_avail</bpmn:incoming><bpmn:outgoing>h_f3</bpmn:outgoing>
+    </bpmn:businessRuleTask>
+
+    <bpmn:serviceTask id="Hi_Book" name="Confirm booking">
+      <bpmn:extensionElements><zeebe:taskDefinition type="hire-confirm-booking" /></bpmn:extensionElements>
+      <bpmn:incoming>h_f3</bpmn:incoming><bpmn:outgoing>h_f4</bpmn:outgoing>
+    </bpmn:serviceTask>
+
+    <bpmn:endEvent id="Hi_EndBooked" name="Tool booked">
+      <bpmn:incoming>h_f4</bpmn:incoming>
+    </bpmn:endEvent>
+
+    <bpmn:serviceTask id="Hi_Unavail" name="Flag unavailable">
+      <bpmn:extensionElements><zeebe:taskDefinition type="hire-flag-unavailable" /></bpmn:extensionElements>
+      <bpmn:incoming>h_unavail</bpmn:incoming><bpmn:outgoing>h_f5</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:endEvent id="Hi_EndUnavail" name="Not available">
+      <bpmn:incoming>h_f5</bpmn:incoming>
+    </bpmn:endEvent>
+
+    <bpmn:sequenceFlow id="h_f1" sourceRef="Hi_Start" targetRef="Hi_Verify" />
+    <bpmn:sequenceFlow id="h_f2" sourceRef="Hi_Verify" targetRef="Hi_Avail" />
+    <bpmn:sequenceFlow id="h_avail" name="available" sourceRef="Hi_Avail" targetRef="Hi_Price">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">=toolAvailable = true</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="h_unavail" name="unavailable" sourceRef="Hi_Avail" targetRef="Hi_Unavail" />
+    <bpmn:sequenceFlow id="h_f3" sourceRef="Hi_Price" targetRef="Hi_Book" />
+    <bpmn:sequenceFlow id="h_f4" sourceRef="Hi_Book" targetRef="Hi_EndBooked" />
+    <bpmn:sequenceFlow id="h_f5" sourceRef="Hi_Unavail" targetRef="Hi_EndUnavail" />
+  </bpmn:process>
+</bpmn:definitions>

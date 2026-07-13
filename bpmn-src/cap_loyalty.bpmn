@@ -1,0 +1,85 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL"
+                  xmlns:zeebe="http://camunda.org/schema/zeebe/1.0"
+                  id="defs_cap_loyalty" targetNamespace="http://probuild/platform">
+  <bpmn:process id="Cap_Loyalty" name="Loyalty Capability" isExecutable="true">
+
+    <bpmn:startEvent id="Loy_Start" name="Loyalty invoked">
+      <bpmn:outgoing>l_f1</bpmn:outgoing>
+    </bpmn:startEvent>
+
+    <bpmn:exclusiveGateway id="Loy_Mode" name="Enrol or accrue?" default="l_accrue">
+      <bpmn:incoming>l_f1</bpmn:incoming>
+      <bpmn:outgoing>l_enrol</bpmn:outgoing>
+      <bpmn:outgoing>l_accrue</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+
+    <!-- ENROL branch: new card or renewal -->
+    <bpmn:exclusiveGateway id="Loy_CardType" name="New or renewal?" default="l_renew">
+      <bpmn:incoming>l_enrol</bpmn:incoming>
+      <bpmn:outgoing>l_new</bpmn:outgoing>
+      <bpmn:outgoing>l_renew</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+
+    <bpmn:serviceTask id="Loy_IssueCard" name="Issue trade card">
+      <bpmn:extensionElements><zeebe:taskDefinition type="loyalty-issue-card" /></bpmn:extensionElements>
+      <bpmn:incoming>l_new</bpmn:incoming>
+      <bpmn:outgoing>l_f2</bpmn:outgoing>
+    </bpmn:serviceTask>
+
+    <bpmn:serviceTask id="Loy_RenewCard" name="Renew trade card">
+      <bpmn:extensionElements><zeebe:taskDefinition type="loyalty-renew-card" /></bpmn:extensionElements>
+      <bpmn:incoming>l_renew</bpmn:incoming>
+      <bpmn:outgoing>l_f3</bpmn:outgoing>
+    </bpmn:serviceTask>
+
+    <!-- ACCRUE branch: add points after a purchase -->
+    <bpmn:serviceTask id="Loy_Accrue" name="Accrue points">
+      <bpmn:extensionElements><zeebe:taskDefinition type="loyalty-accrue-points" /></bpmn:extensionElements>
+      <bpmn:incoming>l_accrue</bpmn:incoming>
+      <bpmn:outgoing>l_f4</bpmn:outgoing>
+    </bpmn:serviceTask>
+
+    <bpmn:exclusiveGateway id="Loy_Merge">
+      <bpmn:incoming>l_f2</bpmn:incoming>
+      <bpmn:incoming>l_f3</bpmn:incoming>
+      <bpmn:incoming>l_f4</bpmn:incoming>
+      <bpmn:outgoing>l_f5</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+
+    <!-- DMN: decide discount band from points balance -->
+    <bpmn:businessRuleTask id="Loy_Band" name="Assess discount band">
+      <bpmn:extensionElements>
+        <zeebe:calledDecision decisionId="loyalty_band" resultVariable="bandResult" />
+      </bpmn:extensionElements>
+      <bpmn:incoming>l_f5</bpmn:incoming>
+      <bpmn:outgoing>l_f6</bpmn:outgoing>
+    </bpmn:businessRuleTask>
+
+    <bpmn:serviceTask id="Loy_Persist" name="Persist band to card">
+      <bpmn:extensionElements><zeebe:taskDefinition type="loyalty-persist-band" /></bpmn:extensionElements>
+      <bpmn:incoming>l_f6</bpmn:incoming>
+      <bpmn:outgoing>l_f7</bpmn:outgoing>
+    </bpmn:serviceTask>
+
+    <bpmn:endEvent id="Loy_End" name="Loyalty updated">
+      <bpmn:incoming>l_f7</bpmn:incoming>
+    </bpmn:endEvent>
+
+    <bpmn:sequenceFlow id="l_f1" sourceRef="Loy_Start" targetRef="Loy_Mode" />
+    <bpmn:sequenceFlow id="l_enrol" name="enrol" sourceRef="Loy_Mode" targetRef="Loy_CardType">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">=loyaltyMode = "ENROL"</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="l_accrue" name="accrue" sourceRef="Loy_Mode" targetRef="Loy_Accrue" />
+    <bpmn:sequenceFlow id="l_new" name="new" sourceRef="Loy_CardType" targetRef="Loy_IssueCard">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">=not(isRenewal)</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="l_renew" name="renewal" sourceRef="Loy_CardType" targetRef="Loy_RenewCard" />
+    <bpmn:sequenceFlow id="l_f2" sourceRef="Loy_IssueCard" targetRef="Loy_Merge" />
+    <bpmn:sequenceFlow id="l_f3" sourceRef="Loy_RenewCard" targetRef="Loy_Merge" />
+    <bpmn:sequenceFlow id="l_f4" sourceRef="Loy_Accrue" targetRef="Loy_Merge" />
+    <bpmn:sequenceFlow id="l_f5" sourceRef="Loy_Merge" targetRef="Loy_Band" />
+    <bpmn:sequenceFlow id="l_f6" sourceRef="Loy_Band" targetRef="Loy_Persist" />
+    <bpmn:sequenceFlow id="l_f7" sourceRef="Loy_Persist" targetRef="Loy_End" />
+  </bpmn:process>
+</bpmn:definitions>

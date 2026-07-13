@@ -1,0 +1,91 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL"
+                  id="defs_strategic" targetNamespace="http://probuild/platform">
+
+  <!-- STRATEGIC AS-IS: the client's current manual, disconnected process.
+       Every cross-pool hand-off is a phone call or a fax; loyalty is reconciled
+       in a spreadsheet after the fact; returned tools wait until someone books FixPro. -->
+  <bpmn:collaboration id="Collab_AsIs">
+    <bpmn:participant id="AS_Pool_Customer" name="Customer" processRef="AsIs_Customer" />
+    <bpmn:participant id="AS_Pool_ProBuild" name="ProBuild (counter &amp; back office)" processRef="AsIs_ProBuild" />
+    <bpmn:participant id="AS_Pool_Warehouse" name="Warehouse" processRef="AsIs_Warehouse" />
+    <bpmn:participant id="AS_Pool_FinTrust" name="FinTrust UK" processRef="AsIs_FinTrust" />
+    <bpmn:participant id="AS_Pool_FixPro" name="FixPro Ltd" processRef="AsIs_FixPro" />
+    <bpmn:messageFlow id="asmf_enq" name="enquiry (in store / phone)" sourceRef="AS_C_Enquire" targetRef="AS_P_Take" />
+    <bpmn:messageFlow id="asmf_stockcall" name="phone: in stock?" sourceRef="AS_P_PhoneWh" targetRef="AS_W_Check" />
+    <bpmn:messageFlow id="asmf_stockback" name="phone: stock level" sourceRef="AS_W_Report" targetRef="AS_P_Quote" />
+    <bpmn:messageFlow id="asmf_quote" name="verbal / paper quote" sourceRef="AS_P_Quote" targetRef="AS_C_Quote" />
+    <bpmn:messageFlow id="asmf_fax" name="fax finance application" sourceRef="AS_P_FaxFin" targetRef="AS_F_Receive" />
+    <bpmn:messageFlow id="asmf_faxback" name="fax / phone decision" sourceRef="AS_F_Decide" targetRef="AS_P_Chase" />
+    <bpmn:messageFlow id="asmf_goods" name="hand over goods" sourceRef="AS_P_Release" targetRef="AS_C_Collect" />
+    <bpmn:messageFlow id="asmf_book" name="phone: book weekly visit" sourceRef="AS_P_BookFix" targetRef="AS_X_Visit" />
+  </bpmn:collaboration>
+
+  <bpmn:process id="AsIs_Customer" name="Customer" isExecutable="false">
+    <bpmn:startEvent id="AS_C_Start"><bpmn:outgoing>ac1</bpmn:outgoing></bpmn:startEvent>
+    <bpmn:task id="AS_C_Enquire" name="Enquire about product / tool"><bpmn:incoming>ac1</bpmn:incoming><bpmn:outgoing>ac2</bpmn:outgoing></bpmn:task>
+    <bpmn:task id="AS_C_Quote" name="Receive verbal quote"><bpmn:incoming>ac2</bpmn:incoming><bpmn:outgoing>ac3</bpmn:outgoing></bpmn:task>
+    <bpmn:task id="AS_C_Pay" name="Pay / apply for finance"><bpmn:incoming>ac3</bpmn:incoming><bpmn:outgoing>ac4</bpmn:outgoing></bpmn:task>
+    <bpmn:task id="AS_C_Collect" name="Collect goods / take tool"><bpmn:incoming>ac4</bpmn:incoming><bpmn:outgoing>ac5</bpmn:outgoing></bpmn:task>
+    <bpmn:endEvent id="AS_C_End"><bpmn:incoming>ac5</bpmn:incoming></bpmn:endEvent>
+    <bpmn:sequenceFlow id="ac1" sourceRef="AS_C_Start" targetRef="AS_C_Enquire" />
+    <bpmn:sequenceFlow id="ac2" sourceRef="AS_C_Enquire" targetRef="AS_C_Quote" />
+    <bpmn:sequenceFlow id="ac3" sourceRef="AS_C_Quote" targetRef="AS_C_Pay" />
+    <bpmn:sequenceFlow id="ac4" sourceRef="AS_C_Pay" targetRef="AS_C_Collect" />
+    <bpmn:sequenceFlow id="ac5" sourceRef="AS_C_Collect" targetRef="AS_C_End" />
+  </bpmn:process>
+
+  <bpmn:process id="AsIs_ProBuild" name="ProBuild" isExecutable="false">
+    <bpmn:startEvent id="AS_P_Start"><bpmn:outgoing>ap1</bpmn:outgoing></bpmn:startEvent>
+    <bpmn:task id="AS_P_Take" name="Take enquiry at counter"><bpmn:incoming>ap1</bpmn:incoming><bpmn:outgoing>ap2</bpmn:outgoing></bpmn:task>
+    <bpmn:manualTask id="AS_P_PhoneWh" name="Phone warehouse to check stock"><bpmn:incoming>ap2</bpmn:incoming><bpmn:outgoing>ap3</bpmn:outgoing></bpmn:manualTask>
+    <bpmn:manualTask id="AS_P_Quote" name="Write quote by hand"><bpmn:incoming>ap3</bpmn:incoming><bpmn:outgoing>ap4</bpmn:outgoing></bpmn:manualTask>
+    <bpmn:manualTask id="AS_P_FaxFin" name="Fax finance application to FinTrust"><bpmn:incoming>ap4</bpmn:incoming><bpmn:outgoing>ap5</bpmn:outgoing></bpmn:manualTask>
+    <bpmn:manualTask id="AS_P_Chase" name="Chase FinTrust by phone"><bpmn:incoming>ap5</bpmn:incoming><bpmn:outgoing>ap6</bpmn:outgoing></bpmn:manualTask>
+    <bpmn:manualTask id="AS_P_Loyalty" name="Reconcile loyalty points in spreadsheet"><bpmn:incoming>ap6</bpmn:incoming><bpmn:outgoing>ap7</bpmn:outgoing></bpmn:manualTask>
+    <bpmn:task id="AS_P_Release" name="Release goods to customer"><bpmn:incoming>ap7</bpmn:incoming><bpmn:outgoing>ap8</bpmn:outgoing></bpmn:task>
+    <bpmn:manualTask id="AS_P_BookFix" name="Book FixPro when tools pile up"><bpmn:incoming>ap8</bpmn:incoming><bpmn:outgoing>ap9</bpmn:outgoing></bpmn:manualTask>
+    <bpmn:endEvent id="AS_P_End"><bpmn:incoming>ap9</bpmn:incoming></bpmn:endEvent>
+    <bpmn:sequenceFlow id="ap1" sourceRef="AS_P_Start" targetRef="AS_P_Take" />
+    <bpmn:sequenceFlow id="ap2" sourceRef="AS_P_Take" targetRef="AS_P_PhoneWh" />
+    <bpmn:sequenceFlow id="ap3" sourceRef="AS_P_PhoneWh" targetRef="AS_P_Quote" />
+    <bpmn:sequenceFlow id="ap4" sourceRef="AS_P_Quote" targetRef="AS_P_FaxFin" />
+    <bpmn:sequenceFlow id="ap5" sourceRef="AS_P_FaxFin" targetRef="AS_P_Chase" />
+    <bpmn:sequenceFlow id="ap6" sourceRef="AS_P_Chase" targetRef="AS_P_Loyalty" />
+    <bpmn:sequenceFlow id="ap7" sourceRef="AS_P_Loyalty" targetRef="AS_P_Release" />
+    <bpmn:sequenceFlow id="ap8" sourceRef="AS_P_Release" targetRef="AS_P_BookFix" />
+    <bpmn:sequenceFlow id="ap9" sourceRef="AS_P_BookFix" targetRef="AS_P_End" />
+  </bpmn:process>
+
+  <bpmn:process id="AsIs_Warehouse" name="Warehouse" isExecutable="false">
+    <bpmn:startEvent id="AS_W_Start"><bpmn:outgoing>aw1</bpmn:outgoing></bpmn:startEvent>
+    <bpmn:manualTask id="AS_W_Check" name="Walk the aisles to check stock"><bpmn:incoming>aw1</bpmn:incoming><bpmn:outgoing>aw2</bpmn:outgoing></bpmn:manualTask>
+    <bpmn:manualTask id="AS_W_Report" name="Report stock level by phone"><bpmn:incoming>aw2</bpmn:incoming><bpmn:outgoing>aw3</bpmn:outgoing></bpmn:manualTask>
+    <bpmn:endEvent id="AS_W_End"><bpmn:incoming>aw3</bpmn:incoming></bpmn:endEvent>
+    <bpmn:sequenceFlow id="aw1" sourceRef="AS_W_Start" targetRef="AS_W_Check" />
+    <bpmn:sequenceFlow id="aw2" sourceRef="AS_W_Check" targetRef="AS_W_Report" />
+    <bpmn:sequenceFlow id="aw3" sourceRef="AS_W_Report" targetRef="AS_W_End" />
+  </bpmn:process>
+
+  <bpmn:process id="AsIs_FinTrust" name="FinTrust UK" isExecutable="false">
+    <bpmn:startEvent id="AS_F_Start"><bpmn:outgoing>af1</bpmn:outgoing></bpmn:startEvent>
+    <bpmn:task id="AS_F_Receive" name="Receive faxed application"><bpmn:incoming>af1</bpmn:incoming><bpmn:outgoing>af2</bpmn:outgoing></bpmn:task>
+    <bpmn:manualTask id="AS_F_Assess" name="Assess application by hand"><bpmn:incoming>af2</bpmn:incoming><bpmn:outgoing>af3</bpmn:outgoing></bpmn:manualTask>
+    <bpmn:manualTask id="AS_F_Decide" name="Fax / phone decision back"><bpmn:incoming>af3</bpmn:incoming><bpmn:outgoing>af4</bpmn:outgoing></bpmn:manualTask>
+    <bpmn:endEvent id="AS_F_End"><bpmn:incoming>af4</bpmn:incoming></bpmn:endEvent>
+    <bpmn:sequenceFlow id="af1" sourceRef="AS_F_Start" targetRef="AS_F_Receive" />
+    <bpmn:sequenceFlow id="af2" sourceRef="AS_F_Receive" targetRef="AS_F_Assess" />
+    <bpmn:sequenceFlow id="af3" sourceRef="AS_F_Assess" targetRef="AS_F_Decide" />
+    <bpmn:sequenceFlow id="af4" sourceRef="AS_F_Decide" targetRef="AS_F_End" />
+  </bpmn:process>
+
+  <bpmn:process id="AsIs_FixPro" name="FixPro Ltd" isExecutable="false">
+    <bpmn:startEvent id="AS_X_Start"><bpmn:outgoing>ax1</bpmn:outgoing></bpmn:startEvent>
+    <bpmn:task id="AS_X_Visit" name="Make weekly site visit"><bpmn:incoming>ax1</bpmn:incoming><bpmn:outgoing>ax2</bpmn:outgoing></bpmn:task>
+    <bpmn:manualTask id="AS_X_Service" name="Service tools left in the bay"><bpmn:incoming>ax2</bpmn:incoming><bpmn:outgoing>ax3</bpmn:outgoing></bpmn:manualTask>
+    <bpmn:endEvent id="AS_X_End"><bpmn:incoming>ax3</bpmn:incoming></bpmn:endEvent>
+    <bpmn:sequenceFlow id="ax1" sourceRef="AS_X_Start" targetRef="AS_X_Visit" />
+    <bpmn:sequenceFlow id="ax2" sourceRef="AS_X_Visit" targetRef="AS_X_Service" />
+    <bpmn:sequenceFlow id="ax3" sourceRef="AS_X_Service" targetRef="AS_X_End" />
+  </bpmn:process>
+</bpmn:definitions>
