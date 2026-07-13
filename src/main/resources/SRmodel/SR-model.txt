@@ -1,0 +1,431 @@
+{
+  "actors": [
+    {
+      "id": "s0107-0000-4000-8000-000000000000",
+      "text": "ProBuild (Orchestrator)",
+      "type": "istar.Actor",
+      "x": 200,
+      "y": 120,
+      "customProperties": {
+        "Description": ""
+      },
+      "nodes": [
+        {
+          "id": "s0101-0000-4000-8000-000000000000",
+          "text": "Serve customer end-to-end",
+          "type": "istar.Goal",
+          "x": 420,
+          "y": 140,
+          "customProperties": {
+            "Description": ""
+          }
+        },
+        {
+          "id": "s0102-0000-4000-8000-000000000000",
+          "text": "Orchestrate journey",
+          "type": "istar.Task",
+          "x": 280,
+          "y": 270,
+          "customProperties": {
+            "Description": ""
+          }
+        },
+        {
+          "id": "s0103-0000-4000-8000-000000000000",
+          "text": "Delegate to capabilities",
+          "type": "istar.Task",
+          "x": 560,
+          "y": 270,
+          "customProperties": {
+            "Description": ""
+          }
+        },
+        {
+          "id": "s0104-0000-4000-8000-000000000000",
+          "text": "Smooth experience",
+          "type": "istar.Quality",
+          "x": 260,
+          "y": 420,
+          "customProperties": {
+            "Description": ""
+          }
+        },
+        {
+          "id": "s0105-0000-4000-8000-000000000000",
+          "text": "No dead ends",
+          "type": "istar.Quality",
+          "x": 500,
+          "y": 420,
+          "customProperties": {
+            "Description": ""
+          }
+        },
+        {
+          "id": "s0106-0000-4000-8000-000000000000",
+          "text": "Auditable steps",
+          "type": "istar.Quality",
+          "x": 720,
+          "y": 420,
+          "customProperties": {
+            "Description": ""
+          }
+        }
+      ]
+    },
+    {
+      "id": "s0118-0000-4000-8000-000000000000",
+      "text": "FinTrust UK",
+      "type": "istar.Actor",
+      "x": 1350,
+      "y": 120,
+      "customProperties": {
+        "Description": ""
+      },
+      "nodes": [
+        {
+          "id": "s0113-0000-4000-8000-000000000000",
+          "text": "Decide & settle finance",
+          "type": "istar.Goal",
+          "x": 1530,
+          "y": 140,
+          "customProperties": {
+            "Description": ""
+          }
+        },
+        {
+          "id": "s0114-0000-4000-8000-000000000000",
+          "text": "Assess creditworthiness",
+          "type": "istar.Task",
+          "x": 1390,
+          "y": 270,
+          "customProperties": {
+            "Description": ""
+          }
+        },
+        {
+          "id": "s0115-0000-4000-8000-000000000000",
+          "text": "Transfer funds",
+          "type": "istar.Task",
+          "x": 1690,
+          "y": 270,
+          "customProperties": {
+            "Description": ""
+          }
+        },
+        {
+          "id": "s0116-0000-4000-8000-000000000000",
+          "text": "Responsible lending",
+          "type": "istar.Quality",
+          "x": 1390,
+          "y": 420,
+          "customProperties": {
+            "Description": ""
+          }
+        },
+        {
+          "id": "s0117-0000-4000-8000-000000000000",
+          "text": "Fast decision",
+          "type": "istar.Quality",
+          "x": 1670,
+          "y": 420,
+          "customProperties": {
+            "Description": ""
+          }
+        }
+      ]
+    },
+    {
+      "id": "s0127-0000-4000-8000-000000000000",
+      "text": "Tool Hire",
+      "type": "istar.Actor",
+      "x": 200,
+      "y": 760,
+      "customProperties": {
+        "Description": ""
+      },
+      "nodes": [
+        {
+          "id": "s0123-0000-4000-8000-000000000000",
+          "text": "Fulfil tool hire",
+          "type": "istar.Goal",
+          "x": 380,
+          "y": 780,
+          "customProperties": {
+            "Description": ""
+          }
+        },
+        {
+          "id": "s0124-0000-4000-8000-000000000000",
+          "text": "Verify availability",
+          "type": "istar.Task",
+          "x": 240,
+          "y": 910,
+          "customProperties": {
+            "Description": ""
+          }
+        },
+        {
+          "id": "s0125-0000-4000-8000-000000000000",
+          "text": "Price by duration",
+          "type": "istar.Task",
+          "x": 540,
+          "y": 910,
+          "customProperties": {
+            "Description": ""
+          }
+        },
+        {
+          "id": "s0126-0000-4000-8000-000000000000",
+          "text": "Fair, transparent pricing",
+          "type": "istar.Quality",
+          "x": 400,
+          "y": 1060,
+          "customProperties": {
+            "Description": ""
+          }
+        }
+      ]
+    },
+    {
+      "id": "s0135-0000-4000-8000-000000000000",
+      "text": "Loyalty",
+      "type": "istar.Actor",
+      "x": 1350,
+      "y": 760,
+      "customProperties": {
+        "Description": ""
+      },
+      "nodes": [
+        {
+          "id": "s0131-0000-4000-8000-000000000000",
+          "text": "Reward loyalty",
+          "type": "istar.Goal",
+          "x": 1530,
+          "y": 780,
+          "customProperties": {
+            "Description": ""
+          }
+        },
+        {
+          "id": "s0132-0000-4000-8000-000000000000",
+          "text": "Accrue points",
+          "type": "istar.Task",
+          "x": 1390,
+          "y": 910,
+          "customProperties": {
+            "Description": ""
+          }
+        },
+        {
+          "id": "s0133-0000-4000-8000-000000000000",
+          "text": "Recalculate band",
+          "type": "istar.Task",
+          "x": 1690,
+          "y": 910,
+          "customProperties": {
+            "Description": ""
+          }
+        },
+        {
+          "id": "s0134-0000-4000-8000-000000000000",
+          "text": "Fair, transparent rewards",
+          "type": "istar.Quality",
+          "x": 1550,
+          "y": 1060,
+          "customProperties": {
+            "Description": ""
+          }
+        }
+      ]
+    }
+  ],
+  "orphans": [],
+  "dependencies": [],
+  "links": [
+    {
+      "id": "s0108-0000-4000-8000-000000000000",
+      "type": "istar.AndRefinementLink",
+      "source": "s0102-0000-4000-8000-000000000000",
+      "target": "s0101-0000-4000-8000-000000000000"
+    },
+    {
+      "id": "s0109-0000-4000-8000-000000000000",
+      "type": "istar.AndRefinementLink",
+      "source": "s0103-0000-4000-8000-000000000000",
+      "target": "s0101-0000-4000-8000-000000000000"
+    },
+    {
+      "id": "s0110-0000-4000-8000-000000000000",
+      "type": "istar.ContributionLink",
+      "source": "s0102-0000-4000-8000-000000000000",
+      "target": "s0104-0000-4000-8000-000000000000",
+      "label": "make"
+    },
+    {
+      "id": "s0111-0000-4000-8000-000000000000",
+      "type": "istar.ContributionLink",
+      "source": "s0102-0000-4000-8000-000000000000",
+      "target": "s0105-0000-4000-8000-000000000000",
+      "label": "help"
+    },
+    {
+      "id": "s0112-0000-4000-8000-000000000000",
+      "type": "istar.ContributionLink",
+      "source": "s0103-0000-4000-8000-000000000000",
+      "target": "s0106-0000-4000-8000-000000000000",
+      "label": "help"
+    },
+    {
+      "id": "s0119-0000-4000-8000-000000000000",
+      "type": "istar.AndRefinementLink",
+      "source": "s0114-0000-4000-8000-000000000000",
+      "target": "s0113-0000-4000-8000-000000000000"
+    },
+    {
+      "id": "s0120-0000-4000-8000-000000000000",
+      "type": "istar.AndRefinementLink",
+      "source": "s0115-0000-4000-8000-000000000000",
+      "target": "s0113-0000-4000-8000-000000000000"
+    },
+    {
+      "id": "s0121-0000-4000-8000-000000000000",
+      "type": "istar.ContributionLink",
+      "source": "s0114-0000-4000-8000-000000000000",
+      "target": "s0116-0000-4000-8000-000000000000",
+      "label": "make"
+    },
+    {
+      "id": "s0122-0000-4000-8000-000000000000",
+      "type": "istar.ContributionLink",
+      "source": "s0114-0000-4000-8000-000000000000",
+      "target": "s0117-0000-4000-8000-000000000000",
+      "label": "help"
+    },
+    {
+      "id": "s0128-0000-4000-8000-000000000000",
+      "type": "istar.AndRefinementLink",
+      "source": "s0124-0000-4000-8000-000000000000",
+      "target": "s0123-0000-4000-8000-000000000000"
+    },
+    {
+      "id": "s0129-0000-4000-8000-000000000000",
+      "type": "istar.AndRefinementLink",
+      "source": "s0125-0000-4000-8000-000000000000",
+      "target": "s0123-0000-4000-8000-000000000000"
+    },
+    {
+      "id": "s0130-0000-4000-8000-000000000000",
+      "type": "istar.ContributionLink",
+      "source": "s0125-0000-4000-8000-000000000000",
+      "target": "s0126-0000-4000-8000-000000000000",
+      "label": "make"
+    },
+    {
+      "id": "s0136-0000-4000-8000-000000000000",
+      "type": "istar.AndRefinementLink",
+      "source": "s0132-0000-4000-8000-000000000000",
+      "target": "s0131-0000-4000-8000-000000000000"
+    },
+    {
+      "id": "s0137-0000-4000-8000-000000000000",
+      "type": "istar.AndRefinementLink",
+      "source": "s0133-0000-4000-8000-000000000000",
+      "target": "s0131-0000-4000-8000-000000000000"
+    },
+    {
+      "id": "s0138-0000-4000-8000-000000000000",
+      "type": "istar.ContributionLink",
+      "source": "s0133-0000-4000-8000-000000000000",
+      "target": "s0134-0000-4000-8000-000000000000",
+      "label": "make"
+    }
+  ],
+  "display": {
+    "s0101-0000-4000-8000-000000000000": {
+      "width": 120,
+      "height": 55
+    },
+    "s0102-0000-4000-8000-000000000000": {
+      "width": 120,
+      "height": 55
+    },
+    "s0103-0000-4000-8000-000000000000": {
+      "width": 120,
+      "height": 55
+    },
+    "s0104-0000-4000-8000-000000000000": {
+      "width": 120,
+      "height": 55
+    },
+    "s0105-0000-4000-8000-000000000000": {
+      "width": 120,
+      "height": 55
+    },
+    "s0106-0000-4000-8000-000000000000": {
+      "width": 120,
+      "height": 55
+    },
+    "s0113-0000-4000-8000-000000000000": {
+      "width": 120,
+      "height": 55
+    },
+    "s0114-0000-4000-8000-000000000000": {
+      "width": 120,
+      "height": 55
+    },
+    "s0115-0000-4000-8000-000000000000": {
+      "width": 120,
+      "height": 55
+    },
+    "s0116-0000-4000-8000-000000000000": {
+      "width": 120,
+      "height": 55
+    },
+    "s0117-0000-4000-8000-000000000000": {
+      "width": 120,
+      "height": 55
+    },
+    "s0123-0000-4000-8000-000000000000": {
+      "width": 120,
+      "height": 55
+    },
+    "s0124-0000-4000-8000-000000000000": {
+      "width": 120,
+      "height": 55
+    },
+    "s0125-0000-4000-8000-000000000000": {
+      "width": 120,
+      "height": 55
+    },
+    "s0126-0000-4000-8000-000000000000": {
+      "width": 120,
+      "height": 55
+    },
+    "s0131-0000-4000-8000-000000000000": {
+      "width": 120,
+      "height": 55
+    },
+    "s0132-0000-4000-8000-000000000000": {
+      "width": 120,
+      "height": 55
+    },
+    "s0133-0000-4000-8000-000000000000": {
+      "width": 120,
+      "height": 55
+    },
+    "s0134-0000-4000-8000-000000000000": {
+      "width": 120,
+      "height": 55
+    }
+  },
+  "tool": "pistar.2.1.0",
+  "istar": "2.0",
+  "saveDate": "Mon, 13 Jul 2026 00:00:00 GMT",
+  "diagram": {
+    "width": 2100,
+    "height": 1250,
+    "customProperties": {
+      "Description": ""
+    }
+  }
+}
